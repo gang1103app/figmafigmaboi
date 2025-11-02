@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
+const DEFAULT_AVATAR = '👤'
+
 export default function Social() {
   const { user, updateUser } = useAuth()
   const [activeTab, setActiveTab] = useState('friends')
@@ -21,14 +23,20 @@ export default function Social() {
   // Get activity feed from friends
   const activityFeed = []
 
+  // State for add friend message
+  const [addFriendMessage, setAddFriendMessage] = useState('')
+
   // Handle adding a friend
   const handleAddFriend = () => {
     if (!friendUsername.trim()) return
     
     // In a real app, this would search for users in a database
-    // For now, we just show a message
-    alert('Friend request functionality requires a backend server. Currently, friends can only be added when the app is connected to a database.')
+    // For now, we show an inline message
+    setAddFriendMessage('Friend request functionality requires a backend server. Currently, friends can only be added when the app is connected to a database.')
     setFriendUsername('')
+    
+    // Clear message after 5 seconds
+    setTimeout(() => setAddFriendMessage(''), 5000)
   }
 
   return (
@@ -100,7 +108,7 @@ export default function Social() {
                   >
                     <div className="flex items-center gap-4">
                       <div className="relative">
-                        <div className="text-5xl">{friend.avatar || '👤'}</div>
+                        <div className="text-5xl">{friend.avatar || DEFAULT_AVATAR}</div>
                         {friend.status && (
                           <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-800 ${
                             friend.status === 'online' ? 'bg-green-400' : 'bg-slate-500'
@@ -115,7 +123,7 @@ export default function Social() {
                           <span>Level {friend.level || 1}</span>
                           <span>•</span>
                           <span>{friend.points || 0} pts</span>
-                          {friend.streak > 0 && (
+                          {friend.streak != null && (
                             <>
                               <span>•</span>
                               <span>🔥 {friend.streak} days</span>
@@ -211,7 +219,7 @@ export default function Social() {
               <p className="text-slate-400 mb-4">
                 Search for friends by username to send them a friend request.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 mb-4">
                 <input
                   type="text"
                   value={friendUsername}
@@ -227,6 +235,11 @@ export default function Social() {
                   Add Friend
                 </button>
               </div>
+              {addFriendMessage && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-yellow-200 text-sm">
+                  {addFriendMessage}
+                </div>
+              )}
             </div>
 
             {/* Info Card */}
