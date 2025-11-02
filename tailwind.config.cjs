@@ -1,0 +1,1 @@
+module.exports = {\n  content: [\n    './index.html',\n    './src/**/*.{js,jsx,ts,tsx}'\n  ],\n  theme: {\n    extend: {\n      colors: {\n        'brand-primary': '#10b981',\n        'brand-accent': '#6ee7b7'\n      }\n    }\n  },\n  plugins: []\n}
