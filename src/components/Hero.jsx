@@ -17,7 +17,7 @@ function Hero() {
             <a href="#signup" className="btn-primary w-full sm:w-auto">
               Start Saving Now
             </a>
-            <button className="bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 w-full sm:w-auto">
+            <button className="btn-outline w-full sm:w-auto">
               Learn More
             </button>
           </div>
