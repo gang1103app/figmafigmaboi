@@ -96,11 +96,21 @@ src/
 ## Notes about the implementation
 
 - **Mobile-first**: Tailwind implementation optimized for mobile with responsive breakpoints
-- **Client-side data**: All data is embedded in components for demonstration purposes
-- **No backend required**: App runs entirely in the browser
+- **Client-side data**: All data is stored locally in the browser using localStorage
+- **Data persistence**: User data persists between sessions in localStorage (no database needed for basic functionality)
+- **No backend required**: App runs entirely in the browser for single-user functionality
 - **Chart visualization**: Interactive charts using Chart.js
 - **Smooth routing**: Client-side navigation with React Router
 - **Modern design**: Dark theme with gradient backgrounds and glassmorphism effects
+
+## Data Storage
+
+The app stores user data locally in your browser using `localStorage`. This means:
+- ✅ Your data persists between sessions
+- ✅ No database setup required for basic app functionality
+- ✅ Works completely offline after initial load
+- ⚠️ Data is stored only in your browser (clearing browser data will delete your progress)
+- ⚠️ Social features (friends, leaderboards) require a backend database to work across multiple users
 
 ## Design Reference
 
@@ -108,15 +118,21 @@ Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
 
 ## Future Enhancements
 
-- Connect to real backend API for live data
-- User authentication and authorization
-- Real-time data synchronization
-- Push notifications for challenges
-- Social features (friends, sharing)
-- Data export and reporting
-- Advanced analytics and insights
+To enable full multi-user functionality, the following features require a backend database:
+
+- **Backend API**: Connect to a server for cross-user features
+- **User authentication**: Secure login and account management
+- **Real friends system**: Add and manage real user connections
+- **Global leaderboards**: Compete with other real users
+- **Activity feed**: See updates from your friends
+- **Real-time data sync**: Synchronize data across devices
+- **Energy monitoring**: Connect to smart home devices for real usage data
+- **Push notifications**: Get notified about challenges and friend activities
+- **Data export**: Export your energy data and reports
 
 ## Render Deployment Instructions
+
+### Static Site Deployment (Current Version)
 
 To deploy this static site to Render:
 
@@ -124,11 +140,26 @@ To deploy this static site to Render:
 2. Connect your GitHub repository (`gang1103app/figmafigmaboi`)
 3. Configure the Static Site settings:
    - **Name**: energy-teen-app (or your preferred name)
-   - **Branch**: `1.1` (or main once merged)
+   - **Branch**: `main` (or your preferred branch)
    - **Build command**: `npm run build`
    - **Publish directory**: `dist`
 4. Click "Create" — Render will install, build, and publish your site
 5. Enable automatic deploys to rebuild on PR merges
+
+**Note**: The static deployment uses browser localStorage for data persistence. Each user's data is stored locally in their browser.
+
+### Backend + Database Setup (For Multi-User Features)
+
+To enable social features (friends, global leaderboards, activity feeds), you'll need:
+
+1. **Backend Server**: Create a Node.js/Express backend API
+2. **Database**: Set up a PostgreSQL database on Render:
+   - Create a new PostgreSQL database in Render
+   - Store user accounts, friendships, and activity data
+3. **Authentication**: Implement user authentication (JWT tokens recommended)
+4. **API Integration**: Update the frontend to call backend APIs instead of using localStorage
+
+This setup is not required for basic single-user functionality but is necessary for multi-user social features.
 
 ## Contributing
 

@@ -1,14 +1,17 @@
 import React from 'react'
+import { useAuth } from '../context/AuthContext'
 import KpiCard from '../components/KpiCard'
 import ChartLine from '../components/ChartLine'
 import ChartPie from '../components/ChartPie'
 
 export default function Analytics() {
-  // Client-side embedded data
-  const weeklyData = [45, 52, 38, 42, 35, 40, 32]
+  const { user } = useAuth()
+  
+  // Placeholder data - in a real app, this would come from actual energy monitoring
+  const weeklyData = [0, 0, 0, 0, 0, 0, 0]
   const weeklyLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   
-  const usageByCategory = [180, 120, 90, 60, 50]
+  const usageByCategory = [0, 0, 0, 0, 0]
   const categoryLabels = ['Heating', 'Cooling', 'Lighting', 'Appliances', 'Other']
 
   return (
@@ -25,32 +28,26 @@ export default function Analytics() {
           <KpiCard
             icon="⚡"
             title="Today's Usage"
-            value="32"
+            value="0"
             unit="kWh"
-            trend="down"
-            trendValue="8%"
           />
           <KpiCard
             icon="💰"
             title="Savings"
-            value="$45"
-            unit="this month"
-            trend="up"
-            trendValue="12%"
+            value={`$${user?.savings || 0}`}
+            unit="total"
           />
           <KpiCard
             icon="🌱"
             title="CO₂ Saved"
-            value="24"
+            value={user?.co2Saved || 0}
             unit="kg"
-            trend="up"
-            trendValue="15%"
           />
           <KpiCard
             icon="🎯"
-            title="Goal Progress"
-            value="78"
-            unit="%"
+            title="Points Earned"
+            value={user?.points || 0}
+            unit="pts"
           />
         </div>
 
@@ -70,19 +67,20 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-1">Average Daily</div>
-            <div className="text-2xl font-bold text-white">38.5 kWh</div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-1">Peak Hour</div>
-            <div className="text-2xl font-bold text-white">6-8 PM</div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-1">Efficiency Score</div>
-            <div className="text-2xl font-bold text-brand-primary">A-</div>
+        {/* Info Card */}
+        <div className="mt-6 bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">📊</div>
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">About Analytics</h3>
+              <p className="text-slate-400 mb-2">
+                Energy analytics track your real-time electricity usage, savings, and environmental impact.
+              </p>
+              <p className="text-slate-400">
+                To see live energy data and usage patterns, the app needs to be connected to smart home
+                devices or an energy monitoring system through a backend server.
+              </p>
+            </div>
           </div>
         </div>
       </div>
