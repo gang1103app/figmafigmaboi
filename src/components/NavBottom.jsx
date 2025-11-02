@@ -5,10 +5,11 @@ export default function NavBottom() {
   const location = useLocation()
   
   const navItems = [
+    { path: '/home', label: 'Home', icon: '🏠' },
+    { path: '/social', label: 'Social', icon: '👥' },
     { path: '/analytics', label: 'Analytics', icon: '📊' },
-    { path: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
-    { path: '/challenges', label: 'Challenges', icon: '⚡' },
-    { path: '/profile', label: 'Profile', icon: '👤' }
+    { path: '/tasks', label: 'Tasks', icon: '✓' },
+    { path: '/settings', label: 'Settings', icon: '⚙️' }
   ]
   
   return (
