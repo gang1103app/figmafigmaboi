@@ -1,1 +1,11 @@
-import React from 'react'\n\nexport default function Footer() {\n  return (\n    <footer className="border-t border-white/6 mt-8">\n      <div className="container py-6 text-sm text-slate-400 text-center">\n        © {new Date().getFullYear()} Energy Teen. Built from a Figma prototype.\n      </div>\n    </footer>\n  )\n}
+import React from 'react'
+
+export default function Footer() {
+  return (
+    <footer className="border-t border-white/6 mt-8">
+      <div className="container py-6 text-sm text-slate-400 text-center">
+        © {new Date().getFullYear()} Energy Teen. Built from a Figma prototype.
+      </div>
+    </footer>
+  )
+}
