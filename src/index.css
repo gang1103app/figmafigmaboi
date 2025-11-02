@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-primary: #10b981;
-  --color-secondary: #3b82f6;
-  --color-accent: #f59e0b;
-  --color-bg: #ffffff;
-  --color-text: #1f2937;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -22,8 +14,6 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: var(--color-text);
-  background-color: var(--color-bg);
 }
 
 @layer components {
