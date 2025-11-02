@@ -225,15 +225,15 @@ export default function Home() {
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50 text-center hover:border-brand-primary/30 transition-colors">
             <div className="text-4xl mb-2">📊</div>
             <div className="font-semibold">Today's Usage</div>
-            <div className="text-2xl font-bold text-brand-primary mt-1">32 kWh</div>
-            <div className="text-xs text-slate-400 mt-1">↓ 8% from yesterday</div>
+            <div className="text-2xl font-bold text-brand-primary mt-1">0 kWh</div>
+            <div className="text-xs text-slate-400 mt-1">Requires energy monitoring</div>
           </div>
 
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50 text-center hover:border-brand-primary/30 transition-colors">
             <div className="text-4xl mb-2">⚡</div>
             <div className="font-semibold">Active Tasks</div>
-            <div className="text-2xl font-bold text-yellow-400 mt-1">3</div>
-            <div className="text-xs text-slate-400 mt-1">Complete to earn rewards</div>
+            <div className="text-2xl font-bold text-yellow-400 mt-1">0</div>
+            <div className="text-xs text-slate-400 mt-1">Check tasks page for challenges</div>
           </div>
         </div>
       </div>

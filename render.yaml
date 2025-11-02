@@ -1,0 +1,38 @@
+services:
+  # Backend API
+  - type: web
+    name: energy-teen-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: energy-teen-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+
+  # Frontend Static Site
+  - type: web
+    name: energy-teen-app
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+databases:
+  - name: energy-teen-db
+    databaseName: energy_teen
+    region: oregon
+    plan: free
