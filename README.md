@@ -133,17 +133,19 @@ This is a **frontend-only** static site with no backend required. To deploy:
 5. Wait 2-5 minutes for build and deployment
 6. Access your live site at the provided Render URL
 
-### Complete Deployment Guide
+### Deployment Documentation
 
-For detailed step-by-step instructions including:
-- Screenshots and configuration details
+**📋 [RENDER_SETUP_SUMMARY.md](./RENDER_SETUP_SUMMARY.md)** - Start here! Quick overview and answers to common questions
+
+**📖 [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Complete step-by-step deployment guide with:
+- Detailed configuration instructions
 - Troubleshooting common issues
 - Custom domain setup
 - Environment variables (for future backend integration)
 - Adding a backend service to Render
 - Cost estimation and monitoring
 
-**See: [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)**
+**✅ [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Printable checklist to use during deployment
 
 ### Important Notes
 
