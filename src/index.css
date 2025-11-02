@@ -5,19 +5,35 @@
 :root {
   --bg-1: #071021;
   --muted: #9aa4b2;
+  --content-color: #0f172a;
+  --card-bg: #ffffff;
 }
 
+/* Use a normal CSS gradient instead of applying Tailwind classes with arbitrary bracketed values */
 body {
-  @apply bg-gradient-to-b from-[#ecfdf5] to-[#dff5ea] text-slate-900;
+  background: linear-gradient(to bottom, #ecfdf5 0%, #dff5ea 100%);
+  color: var(--content-color);
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* container utility used throughout */
 .container {
-  @apply max-w-3xl mx-auto px-4;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  box-sizing: border-box;
 }
 
 /* card style */
 .card {
-  @apply bg-white rounded-xl shadow-sm p-4;
+  background: var(--card-bg);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(2,6,23,0.06), 0 1px 2px rgba(2,6,23,0.04);
+  padding: 1rem;
+  box-sizing: border-box;
 }
