@@ -1,1 +1,139 @@
-# Energy Saving Teen — Landing (Vite + React + Tailwind)\n\nThis repository contains a scaffold for the Energy Saving Teen landing site implemented with:\n- React + Vite\n- Tailwind CSS (mobile-first)\n- Simple components: Header, Hero, Features, Footer\n\n## Local development\n\n1. Install dependencies:\n```bash\nnpm install\n```\n\n2. Run the dev server:\n```bash\nnpm run dev\n```\n\n3. Build:\n```bash\nnpm run build\n```\n\n4. Preview production build locally:\n```bash\nnpm run preview\n```\n\n## Notes about the implementation\n- Mobile-first Tailwind implementation. Desktop responsiveness is provided via breakpoints.\n- Uses a placeholder app preview image. If you have exported SVG/PNG assets from the Figma file, place them in `public/` or `src/assets/` and update the `Hero` component image path.\n- No backend or auth yet; structure allows adding API routes or integrating with services later.\n\n## Render deployment instructions\n\nTo deploy this static site to Render as a Static Site:\n\n1. Sign in to Render and create a new Static Site.\n2. Connect your GitHub repository (choose `gang1103app/figmafigmaboi`).\n3. In the Create Static Site settings:\n   - **Name**: energy-teen-landing (or your preferred name)\n   - **Branch**: `1.0` (or main once merged)\n   - **Build command**: `npm run build`\n   - **Publish directory**: `dist`\n4. Click "Create" — Render will install, build, and publish your site.\n5. (Optional) Enable automatic deploys to rebuild on PR merges to the branch.\n\n## PR template / description (ready to paste)\n\n**Title:**\nfeat: scaffold React + Vite + Tailwind and implement mobile-first landing (from Figma)\n\n**Description:**\n- Scaffolds a Vite + React project and integrates Tailwind CSS.\n- Implements a mobile-first landing page (Header, Hero, Features, Footer) based on the Figma prototype.\n- Placeholder app preview used (replace with exported assets from Figma/images).\n- No backend/auth implemented yet.\n\nDesign source: `Energy-Saving Teen App Prototype.make` (repo root)\n\nWhat to review:\n- Responsiveness and visual parity with Figma for the landing screens.\n- Tailwind usage & accessibility.\n\nNext steps:\n- Replace the placeholder mockups with exported Figma assets (SVGs preferred).\n- Add onboarding / signup pages and any required backend endpoints.\n- Set up CI / staging & configure Render auto-deploy.\n
+# Energy Saving Teen — Dashboard App (Vite + React + Tailwind)
+
+This repository contains a full-featured dashboard for the Energy Saving Teen app implemented with:
+- React + Vite
+- React Router for navigation
+- Tailwind CSS (mobile-first)
+- Chart.js with React Chart.js 2 for data visualization
+- Client-side embedded data (no backend required)
+
+## Features
+
+### 📊 Analytics Page
+- Real-time energy usage tracking
+- Weekly consumption charts
+- Usage breakdown by category (heating, cooling, lighting, appliances)
+- Key performance indicators (KPIs)
+- Savings metrics and CO₂ impact
+
+### 🏆 Leaderboard Page
+- Global rankings of energy savers
+- Points and savings comparison
+- Streak tracking
+- Podium display for top 3 users
+- Filter by time period (week, month, all-time)
+
+### ⚡ Challenges Page
+- Active challenges with progress tracking
+- Completed challenges history
+- Upcoming challenges preview
+- Points and rewards system
+- Difficulty levels (Easy, Medium, Hard)
+
+### 👤 Profile & EcoBuddy Page
+- User profile with level and XP progression
+- EcoBuddy companion (interactive pet)
+- Achievements and badges
+- Personal statistics
+- Settings and preferences
+
+### 🧭 Navigation
+- Mobile-optimized bottom navigation bar
+- Smooth transitions between pages
+- Active route highlighting
+
+## Local development
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Run the dev server:
+```bash
+npm run dev
+```
+
+3. Build:
+```bash
+npm run build
+```
+
+4. Preview production build locally:
+```bash
+npm run preview
+```
+
+## Tech Stack
+
+- **Frontend Framework**: React 18
+- **Build Tool**: Vite 5
+- **Routing**: React Router DOM v6
+- **Styling**: Tailwind CSS 3
+- **Charts**: Chart.js 4 + React Chart.js 2
+- **Data**: Client-side embedded (no API calls)
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── NavBottom.jsx       # Bottom navigation bar
+│   ├── KpiCard.jsx         # Key performance indicator card
+│   ├── ProgressBar.jsx     # Progress bar component
+│   ├── ChartLine.jsx       # Line chart component
+│   └── ChartPie.jsx        # Pie/doughnut chart component
+├── pages/
+│   ├── Analytics.jsx       # Analytics dashboard
+│   ├── Leaderboard.jsx     # Rankings and competition
+│   ├── Challenges.jsx      # Challenges and tasks
+│   └── Profile.jsx         # User profile and EcoBuddy
+├── App.jsx                 # Main app with routing
+├── main.jsx                # App entry point
+└── index.css               # Global styles
+```
+
+## Notes about the implementation
+
+- **Mobile-first**: Tailwind implementation optimized for mobile with responsive breakpoints
+- **Client-side data**: All data is embedded in components for demonstration purposes
+- **No backend required**: App runs entirely in the browser
+- **Chart visualization**: Interactive charts using Chart.js
+- **Smooth routing**: Client-side navigation with React Router
+- **Modern design**: Dark theme with gradient backgrounds and glassmorphism effects
+
+## Design Reference
+
+Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
+
+## Future Enhancements
+
+- Connect to real backend API for live data
+- User authentication and authorization
+- Real-time data synchronization
+- Push notifications for challenges
+- Social features (friends, sharing)
+- Data export and reporting
+- Advanced analytics and insights
+
+## Render Deployment Instructions
+
+To deploy this static site to Render:
+
+1. Sign in to Render and create a new Static Site
+2. Connect your GitHub repository (`gang1103app/figmafigmaboi`)
+3. Configure the Static Site settings:
+   - **Name**: energy-teen-app (or your preferred name)
+   - **Branch**: `1.1` (or main once merged)
+   - **Build command**: `npm run build`
+   - **Publish directory**: `dist`
+4. Click "Create" — Render will install, build, and publish your site
+5. Enable automatic deploys to rebuild on PR merges
+
+## Contributing
+
+This is a demonstration project for the Energy Saving Teen app. For contributions or questions, please open an issue or pull request.
+
+## License
+
+Private repository - All rights reserved
