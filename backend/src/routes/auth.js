@@ -84,6 +84,9 @@ router.post('/login',
         return res.status(401).json({ error: 'Invalid credentials' });
       }
       
+      // Update streak on login
+      await User.updateStreak(user.id);
+      
       // Generate token
       const token = generateToken(user.id);
       

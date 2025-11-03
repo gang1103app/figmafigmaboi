@@ -1,56 +1,34 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-
-const SAMPLE_FRIENDS = [
-  { id: 1, name: 'Sarah Miller', username: '@sarahmiller', level: 15, points: 2380, streak: 25, status: 'online', avatar: '👩' },
-  { id: 2, name: 'Jordan Kim', username: '@jordankim', level: 14, points: 2290, streak: 22, status: 'online', avatar: '🧑' },
-  { id: 3, name: 'Emma Davis', username: '@emmadavis', level: 12, points: 2080, streak: 15, status: 'offline', avatar: '👧' },
-  { id: 4, name: 'Michael Brown', username: '@michaelbrown', level: 11, points: 1950, streak: 12, status: 'offline', avatar: '👦' }
-]
-
-const SAMPLE_ACTIVITIES = [
-  {
-    id: 1,
-    user: 'Sarah Miller',
-    avatar: '👩',
-    action: 'completed',
-    target: 'Peak Hour Saver challenge',
-    points: 200,
-    time: '2 hours ago'
-  },
-  {
-    id: 2,
-    user: 'Jordan Kim',
-    avatar: '🧑',
-    action: 'reached',
-    target: 'Level 14',
-    points: null,
-    time: '5 hours ago'
-  },
-  {
-    id: 3,
-    user: 'Emma Davis',
-    avatar: '👧',
-    action: 'earned',
-    target: 'Hot Streak achievement',
-    points: 150,
-    time: '1 day ago'
-  },
-  {
-    id: 4,
-    user: 'Michael Brown',
-    avatar: '👦',
-    action: 'saved',
-    target: '$50 this month',
-    points: null,
-    time: '1 day ago'
-  }
-]
+import api from '../services/api'
 
 export default function Social() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('friends')
-  const [friendSearch, setFriendSearch] = useState('')
+  const [activeTab, setActiveTab] = useState('leaderboard')
+  const [friends, setFriends] = useState([])
+  const [leaderboard, setLeaderboard] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadData()
+  }, [activeTab])
+
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      if (activeTab === 'friends') {
+        const response = await api.getFriends()
+        setFriends(response.friends || [])
+      } else if (activeTab === 'leaderboard') {
+        const response = await api.getFriendsLeaderboard()
+        setLeaderboard(response.leaderboard || [])
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!user) return null
 
@@ -66,6 +44,16 @@ export default function Social() {
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'leaderboard'
+                ? 'bg-brand-primary text-white'
+                : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Leaderboard
+          </button>
+          <button
             onClick={() => setActiveTab('friends')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
               activeTab === 'friends'
@@ -73,168 +61,148 @@ export default function Social() {
                 : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
             }`}
           >
-            Friends ({SAMPLE_FRIENDS.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('activity')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-              activeTab === 'activity'
-                ? 'bg-brand-primary text-white'
-                : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Activity Feed
-          </button>
-          <button
-            onClick={() => setActiveTab('discover')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-              activeTab === 'discover'
-                ? 'bg-brand-primary text-white'
-                : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Discover
+            Friends ({friends.length})
           </button>
         </div>
 
-        {/* Friends Tab */}
-        {activeTab === 'friends' && (
+        {loading && (
+          <div className="text-center py-12 text-slate-400">
+            <div className="text-xl">Loading...</div>
+          </div>
+        )}
+
+        {/* Leaderboard Tab */}
+        {activeTab === 'leaderboard' && !loading && (
           <div className="space-y-4">
-            {/* Search */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-              <input
-                type="text"
-                value={friendSearch}
-                onChange={(e) => setFriendSearch(e.target.value)}
-                placeholder="Search friends..."
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent"
-              />
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 mb-4">
+              <h3 className="text-lg font-semibold mb-2">Friends & You</h3>
+              <p className="text-sm text-slate-400">
+                See how you and your friends rank based on completed tasks and seeds earned
+              </p>
             </div>
 
-            {/* Friends List */}
-            <div className="space-y-3">
-              {SAMPLE_FRIENDS.map(friend => (
-                <div
-                  key={friend.id}
-                  className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="text-5xl">{friend.avatar}</div>
-                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-800 ${
-                        friend.status === 'online' ? 'bg-green-400' : 'bg-slate-500'
-                      }`} />
-                    </div>
+            {leaderboard.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                <div className="text-5xl mb-4">👥</div>
+                <p className="mb-2">No leaderboard data yet</p>
+                <p className="text-sm">Add friends and complete tasks to see rankings!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {leaderboard.map((person, index) => {
+                  const isCurrentUser = person.id === user.id
+                  const rank = index + 1
+                  
+                  return (
+                    <div
+                      key={person.id}
+                      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border transition-colors ${
+                        isCurrentUser 
+                          ? 'border-brand-primary/50 bg-brand-primary/10' 
+                          : 'border-slate-700/50 hover:border-brand-primary/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Rank */}
+                        <div className="w-12 text-center">
+                          <div className={`text-2xl font-bold ${
+                            rank === 1 ? 'text-yellow-400' :
+                            rank === 2 ? 'text-slate-300' :
+                            rank === 3 ? 'text-amber-600' :
+                            'text-slate-400'
+                          }`}>
+                            {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
+                          </div>
+                        </div>
 
-                    <div className="flex-grow">
-                      <div className="font-semibold text-white">{friend.name}</div>
-                      <div className="text-sm text-slate-400">{friend.username}</div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                        <span>Level {friend.level}</span>
-                        <span>•</span>
-                        <span>{friend.points} pts</span>
-                        <span>•</span>
-                        <span>🔥 {friend.streak} days</span>
+                        {/* EcoBuddy Preview */}
+                        <div className="relative w-16 h-16">
+                          <img 
+                            src="/EcoBuddyTransparent_cropped.png" 
+                            alt="EcoBuddy" 
+                            className="w-full h-full object-contain opacity-80"
+                          />
+                          {person.mood === 'happy' && <div className="absolute top-0 right-0 text-lg">😊</div>}
+                          {person.mood === 'excited' && <div className="absolute top-0 right-0 text-lg">🤩</div>}
+                        </div>
+
+                        {/* User Info */}
+                        <div className="flex-grow">
+                          <div className="font-semibold text-white flex items-center gap-2">
+                            {person.name}
+                            {isCurrentUser && (
+                              <span className="text-xs bg-brand-primary px-2 py-0.5 rounded-full">You</span>
+                            )}
+                          </div>
+                          <div className="text-sm text-slate-400">
+                            @{person.username} • Level {person.level}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                            <span>✅ {person.completed_tasks || 0} tasks</span>
+                            <span>•</span>
+                            <span>🌱 {person.seeds || 0} seeds</span>
+                            <span>•</span>
+                            <span>🔥 {person.streak || 0} day streak</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex flex-col gap-2">
-                      <button className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors">
-                        Message
-                      </button>
-                      <button className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
-                        View Profile
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Activity Feed Tab */}
-        {activeTab === 'activity' && (
-          <div className="space-y-3">
-            {SAMPLE_ACTIVITIES.map(activity => (
-              <div
-                key={activity.id}
-                className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="text-4xl">{activity.avatar}</div>
-                  <div className="flex-grow">
-                    <p className="text-slate-200">
-                      <span className="font-semibold text-white">{activity.user}</span>
-                      {' '}{activity.action}{' '}
-                      <span className="text-brand-primary">{activity.target}</span>
-                      {activity.points && (
-                        <span className="text-yellow-400"> (+{activity.points} pts)</span>
-                      )}
-                    </p>
-                    <p className="text-sm text-slate-400 mt-1">{activity.time}</p>
-                  </div>
-                  <button className="text-slate-400 hover:text-brand-primary">
-                    <span className="text-xl">👍</span>
-                  </button>
-                </div>
+        {/* Friends Tab */}
+        {activeTab === 'friends' && !loading && (
+          <div className="space-y-4">
+            {friends.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                <div className="text-5xl mb-4">👥</div>
+                <p className="mb-2">You haven't added any friends yet</p>
+                <p className="text-sm">Connect with other EcoBuddy users to compare progress!</p>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Discover Tab */}
-        {activeTab === 'discover' && (
-          <div className="space-y-6">
-            {/* Suggested Friends */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Suggested Friends</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {SAMPLE_FRIENDS.slice(0, 4).map(friend => (
+            ) : (
+              <div className="space-y-3">
+                {friends.map(friend => (
                   <div
                     key={friend.id}
-                    className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 text-center"
+                    className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors"
                   >
-                    <div className="text-5xl mb-2">{friend.avatar}</div>
-                    <div className="font-semibold text-white">{friend.name}</div>
-                    <div className="text-sm text-slate-400 mb-3">{friend.username}</div>
-                    <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mb-3">
-                      <span>Level {friend.level}</span>
-                      <span>•</span>
-                      <span>{friend.points} pts</span>
-                    </div>
-                    <button className="w-full px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors">
-                      Add Friend
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-16 h-16">
+                        <img 
+                          src="/EcoBuddyTransparent_cropped.png" 
+                          alt="EcoBuddy" 
+                          className="w-full h-full object-contain opacity-80"
+                        />
+                        {friend.mood === 'happy' && <div className="absolute top-0 right-0 text-lg">😊</div>}
+                        {friend.mood === 'excited' && <div className="absolute top-0 right-0 text-lg">🤩</div>}
+                      </div>
 
-            {/* Top Energy Savers */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Top Energy Savers This Week</h3>
-              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-                {SAMPLE_FRIENDS.map((friend, index) => (
-                  <div
-                    key={friend.id}
-                    className="flex items-center gap-3 py-3 border-b border-slate-700/50 last:border-b-0"
-                  >
-                    <div className="text-2xl font-bold text-slate-400 w-8">#{index + 1}</div>
-                    <div className="text-3xl">{friend.avatar}</div>
-                    <div className="flex-grow">
-                      <div className="font-semibold text-white">{friend.name}</div>
-                      <div className="text-sm text-slate-400">
-                        {friend.points} points • 🔥 {friend.streak} day streak
+                      <div className="flex-grow">
+                        <div className="font-semibold text-white">{friend.name}</div>
+                        <div className="text-sm text-slate-400">@{friend.username}</div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                          <span>Level {friend.level}</span>
+                          <span>•</span>
+                          <span>🌱 {friend.seeds || 0} seeds</span>
+                          <span>•</span>
+                          <span>🔥 {friend.streak || 0} days</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <button className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
+                          View Profile
+                        </button>
                       </div>
                     </div>
-                    <button className="px-3 py-1 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
-                      Follow
-                    </button>
                   </div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
