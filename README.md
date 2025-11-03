@@ -116,19 +116,44 @@ Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
 - Data export and reporting
 - Advanced analytics and insights
 
-## Render Deployment Instructions
+## Deployment
 
-To deploy this static site to Render:
+### Quick Deploy to Render
 
-1. Sign in to Render and create a new Static Site
+This is a **frontend-only** static site with no backend required. To deploy:
+
+1. Sign in to [Render](https://render.com) and create a new **Static Site**
 2. Connect your GitHub repository (`gang1103app/figmafigmaboi`)
 3. Configure the Static Site settings:
-   - **Name**: energy-teen-app (or your preferred name)
-   - **Branch**: `1.1` (or main once merged)
+   - **Name**: `energy-teen-app` (or your preferred name)
+   - **Branch**: `main`
    - **Build command**: `npm run build`
    - **Publish directory**: `dist`
-4. Click "Create" — Render will install, build, and publish your site
-5. Enable automatic deploys to rebuild on PR merges
+4. Click "Create Static Site"
+5. Wait 2-5 minutes for build and deployment
+6. Access your live site at the provided Render URL
+
+### Deployment Documentation
+
+**📋 [RENDER_SETUP_SUMMARY.md](./RENDER_SETUP_SUMMARY.md)** - Start here! Quick overview and answers to common questions
+
+**📖 [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Complete step-by-step deployment guide with:
+- Detailed configuration instructions
+- Troubleshooting common issues
+- Custom domain setup
+- Environment variables (for future backend integration)
+- Adding a backend service to Render
+- Cost estimation and monitoring
+
+**✅ [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Printable checklist to use during deployment
+
+### Important Notes
+
+- ✅ **No backend required** - App runs entirely client-side
+- ✅ **No database needed** - All data is embedded
+- ✅ **No environment variables required**
+- ✅ **Automatic deployments** on git push
+- ✅ **Free tier available** on Render
 
 ## Contributing
 
