@@ -59,9 +59,51 @@ This guide explains how to deploy the Energy Teen App backend with PostgreSQL da
 
 ## Step 3: Initialize Database
 
-After your backend is deployed, you need to run the database migration to create all tables.
+After your backend is deployed, the database tables need to be created. The backend is configured to automatically run migrations on startup, but you have multiple options if you need to manually trigger the migration:
 
-### Option A: Using Render Shell (Recommended)
+### Option A: Automatic Migration (Recommended)
+
+**The database migration runs automatically when the backend starts!**
+
+1. After deploying your backend service, Render will automatically start it
+2. Check the backend logs to verify the migration ran successfully:
+   - Go to your backend web service on Render
+   - Click on the **"Logs"** tab in the left sidebar
+   - Look for messages like:
+     ```
+     🔄 Running database migrations on startup...
+     ✅ Users table created
+     ✅ User progress table created
+     ✅ Database migration completed successfully!
+     ```
+3. If you see these messages, your database is ready to use!
+
+### Option B: Manual Migration via API (If automatic migration fails)
+
+If the automatic migration failed or you need to re-run migrations, you can trigger them via an API endpoint:
+
+1. Use curl, Postman, or your browser to send a POST request to your backend:
+   ```bash
+   curl -X POST https://your-backend-api.onrender.com/api/migrate
+   ```
+   Replace `your-backend-api.onrender.com` with your actual backend URL
+
+2. You should receive a response like:
+   ```json
+   {
+     "success": true,
+     "message": "Database migration completed successfully",
+     "timestamp": "2024-11-03T00:00:00.000Z"
+   }
+   ```
+
+3. Check the backend logs to confirm all tables were created
+
+**Note:** This endpoint is publicly accessible but safe to call multiple times. It uses `CREATE TABLE IF NOT EXISTS` so running it again won't cause any issues.
+
+### Option C: Using Render Shell (If you have access)
+
+If you have access to the Render Shell:
 
 1. Go to your backend web service on Render
 2. Click on the **"Shell"** tab in the left sidebar
@@ -71,7 +113,9 @@ After your backend is deployed, you need to run the database migration to create
    ```
 4. You should see output confirming all tables were created
 
-### Option B: Using Render Connect
+### Option D: Using Render CLI (If you have it installed)
+
+If you have the Render CLI installed locally:
 
 1. Install the Render CLI: `npm install -g render-cli`
 2. Connect to your service: `render connect energy-teen-api`
@@ -122,9 +166,11 @@ Once everything is deployed, verify your setup:
 - Make sure there are no trailing slashes in the URL
 
 ### Migration Failed
-- Check if the database is accessible
-- View logs in Render dashboard for detailed error messages
-- Make sure PostgreSQL is fully provisioned before running migrations
+- Check backend logs for migration error messages
+- Verify the `DATABASE_URL` environment variable is set correctly
+- Make sure PostgreSQL is fully provisioned and showing "Available" status
+- Try manually triggering migration via the API endpoint: `POST /api/migrate`
+- View detailed error messages in the backend logs on Render dashboard
 
 ### API Not Responding
 - Check if the backend service is running (green status in Render)

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
+import { createTables } from './config/migrate.js';
 
 dotenv.config();
 
@@ -55,6 +56,27 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Database migration endpoint (for users without shell access)
+app.post('/api/migrate', async (req, res) => {
+  try {
+    console.log('🔄 Manual migration triggered via API endpoint...');
+    const result = await createTables(false);
+    res.json({ 
+      success: true,
+      message: 'Database migration completed successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Migration failed',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
@@ -81,11 +103,25 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
+// Initialize database on startup
+const initializeDatabase = async () => {
+  try {
+    console.log('🔄 Running database migrations on startup...');
+    await createTables(false);
+  } catch (error) {
+    console.error('⚠️  Warning: Database migration failed on startup:', error.message);
+    console.log('💡 You can manually trigger migration by sending a POST request to /api/migrate');
+  }
+};
+
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Energy Teen API server running on port ${PORT}`);
   console.log(`📍 API available at http://localhost:${PORT}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+  
+  // Run migrations after server starts
+  await initializeDatabase();
 });
 
 export default app;
