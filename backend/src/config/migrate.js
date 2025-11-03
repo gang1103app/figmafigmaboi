@@ -35,10 +35,12 @@ export const createTables = async (exitOnComplete = true) => {
         level INTEGER DEFAULT 1,
         xp INTEGER DEFAULT 0,
         points INTEGER DEFAULT 0,
+        seeds INTEGER DEFAULT 0,
         total_savings DECIMAL(10, 2) DEFAULT 0,
         co2_saved DECIMAL(10, 2) DEFAULT 0,
         streak INTEGER DEFAULT 0,
         best_streak INTEGER DEFAULT 0,
+        last_login_date DATE,
         last_activity_date DATE,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -50,7 +52,7 @@ export const createTables = async (exitOnComplete = true) => {
       CREATE TABLE IF NOT EXISTS user_ecobuddy (
         id SERIAL PRIMARY KEY,
         user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        name VARCHAR(50) DEFAULT 'Sparky',
+        name VARCHAR(50) DEFAULT 'EcoBuddy',
         level INTEGER DEFAULT 1,
         accessories JSONB DEFAULT '[]',
         mood VARCHAR(20) DEFAULT 'happy',
@@ -129,6 +131,20 @@ export const createTables = async (exitOnComplete = true) => {
       )
     `);
     console.log('✅ Energy usage table created');
+    
+    // Friends table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_friends (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        friend_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, friend_id),
+        CHECK (user_id != friend_id)
+      )
+    `);
+    console.log('✅ Friends table created');
     
     // Insert default achievements
     await client.query(`

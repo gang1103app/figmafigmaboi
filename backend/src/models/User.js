@@ -114,10 +114,12 @@ class User {
         level: progress.level,
         xp: progress.xp,
         points: progress.points,
+        seeds: progress.seeds || 0,
         totalSavings: parseFloat(progress.total_savings),
         co2Saved: parseFloat(progress.co2_saved),
         streak: progress.streak,
         bestStreak: progress.best_streak,
+        lastLoginDate: progress.last_login_date,
         ecobuddy: {
           name: ecobuddy.name,
           level: ecobuddy.level,
@@ -149,6 +151,10 @@ class User {
       fields.push(`points = $${paramCount++}`);
       values.push(updates.points);
     }
+    if (updates.seeds !== undefined) {
+      fields.push(`seeds = $${paramCount++}`);
+      values.push(updates.seeds);
+    }
     if (updates.totalSavings !== undefined) {
       fields.push(`total_savings = $${paramCount++}`);
       values.push(updates.totalSavings);
@@ -165,6 +171,10 @@ class User {
       fields.push(`best_streak = $${paramCount++}`);
       values.push(updates.bestStreak);
     }
+    if (updates.lastLoginDate !== undefined) {
+      fields.push(`last_login_date = $${paramCount++}`);
+      values.push(updates.lastLoginDate);
+    }
     
     if (fields.length === 0) return null;
     
@@ -180,6 +190,54 @@ class User {
     
     const result = await pool.query(query, values);
     return result.rows[0];
+  }
+  
+  static async updateStreak(userId) {
+    const result = await pool.query(
+      'SELECT last_login_date, streak, best_streak FROM user_progress WHERE user_id = $1',
+      [userId]
+    );
+    
+    if (!result.rows[0]) return null;
+    
+    const { last_login_date, streak, best_streak } = result.rows[0];
+    const today = new Date().toISOString().split('T')[0];
+    
+    // If already logged in today, no update needed
+    if (last_login_date === today) {
+      return { streak, bestStreak: best_streak };
+    }
+    
+    let newStreak = streak;
+    let newBestStreak = best_streak;
+    
+    if (!last_login_date) {
+      // First login
+      newStreak = 1;
+    } else {
+      const lastDate = new Date(last_login_date);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        // Consecutive day
+        newStreak = streak + 1;
+      } else {
+        // Streak broken
+        newStreak = 1;
+      }
+    }
+    
+    newBestStreak = Math.max(newStreak, best_streak);
+    
+    await pool.query(
+      `UPDATE user_progress 
+       SET streak = $1, best_streak = $2, last_login_date = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $4`,
+      [newStreak, newBestStreak, today, userId]
+    );
+    
+    return { streak: newStreak, bestStreak: newBestStreak };
   }
 }
 
