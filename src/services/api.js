@@ -1,8 +1,20 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// Ensure the base URL always ends with /api
+const normalizeBaseURL = (url) => {
+  if (!url) return 'http://localhost:3001/api';
+  // Remove trailing slash if present
+  url = url.replace(/\/$/, '');
+  // Add /api if not already present
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
+
 class ApiService {
   constructor() {
-    this.baseURL = API_BASE_URL;
+    this.baseURL = normalizeBaseURL(API_BASE_URL);
     this.token = localStorage.getItem('energyAppToken');
   }
 
