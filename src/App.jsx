@@ -36,8 +36,14 @@ function AppRoutes() {
           path="/" 
           element={isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />} 
         />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route 
+          path="/login" 
+          element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />} 
+        />
+        <Route 
+          path="/signup" 
+          element={isAuthenticated ? <Navigate to="/home" replace /> : <Signup />} 
+        />
         
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
@@ -46,6 +52,12 @@ function AppRoutes() {
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        
+        {/* Catch-all route for unknown URLs */}
+        <Route 
+          path="*" 
+          element={isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />} 
+        />
       </Routes>
       {isAuthenticated && <NavBottom />}
     </div>
