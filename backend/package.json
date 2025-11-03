@@ -1,7 +1,7 @@
 {
-  "name": "energy-teen-backend",
-  "version": "1.4.0",
-  "description": "Backend API for Energy Teen App",
+  "name": "ecobuddy-backend",
+  "version": "1.5.0",
+  "description": "Backend API for EcoBuddy App",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

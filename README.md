@@ -1,44 +1,50 @@
-# Energy Saving Teen — Dashboard App (Vite + React + Tailwind + Backend)
+# EcoBuddy — Your Energy Saving Companion (v1.5)
 
 > 🚀 **Want to deploy to Render?** See **[DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** for complete deployment guide with all specific details.
 
-This repository contains a full-featured dashboard for the Energy Saving Teen app implemented with:
+This repository contains EcoBuddy, a full-featured energy-saving dashboard app with:
 - React + Vite (Frontend)
 - React Router for navigation
 - Tailwind CSS (mobile-first)
 - Chart.js with React Chart.js 2 for data visualization
-- **Express.js + PostgreSQL Backend (NEW in v1.4)**
+- **Express.js + PostgreSQL Backend**
 - **User Authentication & Data Persistence**
+- **Seeds Currency System**
+- **Streak Tracking**
+- **Friends & Social Features**
 
-## Features
+## Features (v1.5)
 
 ### 📊 Analytics Page
-- Real-time energy usage tracking
+- Real-time energy usage tracking based on completed tasks
 - Weekly consumption charts
 - Usage breakdown by category (heating, cooling, lighting, appliances)
 - Key performance indicators (KPIs)
 - Savings metrics and CO₂ impact
+- **NEW:** Shows actual data only - zeros for new users
 
-### 🏆 Leaderboard Page
-- Global rankings of energy savers
-- Points and savings comparison
-- Streak tracking
-- Podium display for top 3 users
-- Filter by time period (week, month, all-time)
+### 🏆 Social & Leaderboard
+- Friends leaderboard showing completed tasks and seeds
+- See friends' EcoBuddy mascots
+- Track friends' streaks and progress
+- **NEW:** No default friends - only real connections
 
-### ⚡ Challenges Page
-- Active challenges with progress tracking
-- Completed challenges history
-- Upcoming challenges preview
-- Points and rewards system
-- Difficulty levels (Easy, Medium, Hard)
+### ⚡ Tasks/Challenges Page
+- Active challenges with real progress tracking
+- **NEW:** Completable challenges that award seeds
+- Mark progress and complete challenges
+- Earn seeds for each completion
+- Track completed challenges history
+- Start new challenges from available pool
 
-### 👤 Profile & EcoBuddy Page
-- User profile with level and XP progression
-- EcoBuddy companion (interactive pet)
-- Achievements and badges
-- Personal statistics
-- Settings and preferences
+### 🌱 EcoBuddy Home Page
+- Interactive EcoBuddy mascot with transparent image
+- **NEW:** Seeds-based economy (replaced points)
+- Customizable accessories (sunglasses, top hat, crown, scarf)
+- Accessories properly positioned on mascot
+- **NEW:** Daily login streak tracking
+- Level progression and XP system
+- Feed and play with EcoBuddy using seeds
 
 ### 🧭 Navigation
 - Mobile-optimized bottom navigation bar

@@ -160,6 +160,33 @@ class ApiService {
     if (endDate) params.append('endDate', endDate);
     return await this.request(`/user/energy-usage?${params}`);
   }
+
+  async updateStreak() {
+    return await this.request('/user/streak/update', {
+      method: 'POST'
+    });
+  }
+
+  async getFriends() {
+    return await this.request('/user/friends');
+  }
+
+  async addFriend(friendId) {
+    return await this.request('/user/friends/add', {
+      method: 'POST',
+      body: JSON.stringify({ friendId })
+    });
+  }
+
+  async removeFriend(friendId) {
+    return await this.request(`/user/friends/${friendId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getFriendsLeaderboard() {
+    return await this.request('/user/leaderboard/friends');
+  }
 }
 
 export default new ApiService();

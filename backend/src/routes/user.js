@@ -31,6 +31,7 @@ router.patch('/progress',
     body('level').optional().isInt({ min: 1 }),
     body('xp').optional().isInt({ min: 0 }),
     body('points').optional().isInt({ min: 0 }),
+    body('seeds').optional().isInt({ min: 0 }),
     body('totalSavings').optional().isFloat({ min: 0 }),
     body('co2Saved').optional().isFloat({ min: 0 }),
     body('streak').optional().isInt({ min: 0 }),
@@ -322,6 +323,120 @@ router.get('/energy-usage', async (req, res) => {
     res.json({ energyUsage: result.rows });
   } catch (error) {
     console.error('Get energy usage error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update streak (call on login)
+router.post('/streak/update', async (req, res) => {
+  try {
+    const streakData = await User.updateStreak(req.user.userId);
+    res.json({ streak: streakData.streak, bestStreak: streakData.bestStreak });
+  } catch (error) {
+    console.error('Update streak error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Friends endpoints
+router.get('/friends', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.username, up.level, up.seeds, up.streak, ue.accessories, ue.mood
+       FROM user_friends uf
+       JOIN users u ON uf.friend_id = u.id
+       JOIN user_progress up ON u.id = up.user_id
+       JOIN user_ecobuddy ue ON u.id = ue.user_id
+       WHERE uf.user_id = $1 AND uf.status = 'accepted'
+       ORDER BY up.seeds DESC`,
+      [req.user.userId]
+    );
+    res.json({ friends: result.rows });
+  } catch (error) {
+    console.error('Get friends error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/friends/add',
+  writeLimiter,
+  [body('friendId').isInt()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { friendId } = req.body;
+      
+      // Check if friend exists
+      const friendCheck = await pool.query('SELECT id FROM users WHERE id = $1', [friendId]);
+      if (friendCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Add friendship
+      await pool.query(
+        `INSERT INTO user_friends (user_id, friend_id, status) 
+         VALUES ($1, $2, 'accepted')
+         ON CONFLICT (user_id, friend_id) DO NOTHING`,
+        [req.user.userId, friendId]
+      );
+      
+      // Add reverse friendship
+      await pool.query(
+        `INSERT INTO user_friends (user_id, friend_id, status) 
+         VALUES ($1, $2, 'accepted')
+         ON CONFLICT (user_id, friend_id) DO NOTHING`,
+        [friendId, req.user.userId]
+      );
+      
+      res.json({ message: 'Friend added successfully' });
+    } catch (error) {
+      console.error('Add friend error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+router.delete('/friends/:friendId', writeLimiter, async (req, res) => {
+  try {
+    const { friendId } = req.params;
+    
+    // Remove both directions of friendship
+    await pool.query(
+      'DELETE FROM user_friends WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)',
+      [req.user.userId, friendId]
+    );
+    
+    res.json({ message: 'Friend removed successfully' });
+  } catch (error) {
+    console.error('Remove friend error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get leaderboard with friends
+router.get('/leaderboard/friends', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.username, up.level, up.seeds, up.streak,
+              ue.accessories, ue.mood,
+              (SELECT COUNT(*) FROM user_challenges uc WHERE uc.user_id = u.id AND uc.status = 'completed') as completed_tasks
+       FROM users u
+       JOIN user_progress up ON u.id = up.user_id
+       JOIN user_ecobuddy ue ON u.id = ue.user_id
+       WHERE u.id = $1 OR u.id IN (
+         SELECT friend_id FROM user_friends WHERE user_id = $1 AND status = 'accepted'
+       )
+       ORDER BY completed_tasks DESC, up.seeds DESC
+       LIMIT 50`,
+      [req.user.userId]
+    );
+    res.json({ leaderboard: result.rows });
+  } catch (error) {
+    console.error('Get friends leaderboard error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -2,12 +2,10 @@ import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 const ACCESSORIES = [
-  { id: 'hat1', name: 'Cool Cap', emoji: '🧢', cost: 100 },
-  { id: 'hat2', name: 'Crown', emoji: '👑', cost: 250 },
-  { id: 'glasses1', name: 'Sunglasses', emoji: '🕶️', cost: 150 },
-  { id: 'glasses2', name: 'Nerd Glasses', emoji: '👓', cost: 120 },
-  { id: 'item1', name: 'Bow Tie', emoji: '🎀', cost: 80 },
-  { id: 'item2', name: 'Scarf', emoji: '🧣', cost: 90 },
+  { id: 'sunglasses', name: 'Sunglasses', emoji: '🕶️', cost: 150, type: 'glasses', position: { top: '28%', left: '50%' } },
+  { id: 'tophat', name: 'Top Hat', emoji: '🎩', cost: 250, type: 'hat', position: { top: '10%', left: '50%' } },
+  { id: 'crown', name: 'Crown', emoji: '👑', cost: 300, type: 'hat', position: { top: '8%', left: '50%' } },
+  { id: 'scarf', name: 'Scarf', emoji: '🧣', cost: 120, type: 'neck', position: { top: '55%', left: '50%' } },
 ]
 
 const MOODS = {
@@ -24,14 +22,15 @@ export default function Home() {
 
   if (!user) return null
 
-  const ecobuddy = user.ecobuddy || { name: 'Sparky', level: 1, accessories: [], mood: 'happy' }
+  const ecobuddy = user.ecobuddy || { name: 'EcoBuddy', level: 1, accessories: [], mood: 'happy' }
+  const seeds = user.seeds || 0
 
   const handleFeed = () => {
-    if (user.points >= 10) {
+    if (seeds >= 10) {
       const newXp = (user.xp || 0) + 50
       const newLevel = Math.floor(newXp / 1000) + 1
       updateUser({
-        points: user.points - 10,
+        seeds: seeds - 10,
         xp: newXp,
         level: newLevel,
         ecobuddy: {
@@ -52,10 +51,10 @@ export default function Home() {
   }
 
   const handleBuyAccessory = (accessory) => {
-    if (user.points >= accessory.cost) {
+    if (seeds >= accessory.cost) {
       const newAccessories = [...(ecobuddy.accessories || []), accessory.id]
       updateUser({
-        points: user.points - accessory.cost,
+        seeds: seeds - accessory.cost,
         ecobuddy: { ...ecobuddy, accessories: newAccessories }
       })
     }
@@ -92,49 +91,52 @@ export default function Home() {
         {/* Stats Overview */}
         <div className="grid grid-cols-4 gap-3 mb-6">
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50 text-center">
-            <div className="text-2xl font-bold text-brand-primary">{user.level}</div>
+            <div className="text-2xl font-bold text-brand-primary">{user.level || 1}</div>
             <div className="text-xs text-slate-400">Level</div>
           </div>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50 text-center">
-            <div className="text-2xl font-bold text-yellow-400">{user.points || 0}</div>
-            <div className="text-xs text-slate-400">Points</div>
+            <div className="text-2xl font-bold text-yellow-400">🌱 {seeds}</div>
+            <div className="text-xs text-slate-400">Seeds</div>
           </div>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50 text-center">
-            <div className="text-2xl font-bold text-green-400">${user.savings || 0}</div>
+            <div className="text-2xl font-bold text-green-400">${user.totalSavings || 0}</div>
             <div className="text-xs text-slate-400">Saved</div>
           </div>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50 text-center">
             <div className="text-2xl font-bold text-orange-400">{user.streak || 0}🔥</div>
-            <div className="text-xs text-slate-400">Streak</div>
+            <div className="text-xs text-slate-400">Day Streak</div>
           </div>
         </div>
 
         {/* EcoBuddy Display */}
         <div className="bg-gradient-to-br from-brand-primary/20 to-brand-accent/10 backdrop-blur-sm rounded-xl p-6 border border-brand-primary/30 mb-6">
           <div className="text-center mb-4">
-            <div className="inline-block relative">
-              {/* Main Mascot */}
-              <div className="text-9xl mb-2">⚡</div>
+            <div className="inline-block relative w-64 h-64 mx-auto">
+              {/* Main Mascot Image */}
+              <img 
+                src="/EcoBuddyTransparent_cropped.png" 
+                alt="EcoBuddy" 
+                className="w-full h-full object-contain"
+              />
               
               {/* Accessories Overlay */}
-              <div className="absolute top-0 left-0 right-0 bottom-0 flex flex-col items-center justify-center">
-                {ownedAccessories.slice(0, 3).map((acc, idx) => (
-                  <div 
-                    key={acc.id}
-                    className="text-4xl"
-                    style={{ 
-                      position: 'absolute',
-                      top: idx === 0 ? '-20px' : idx === 1 ? '30%' : '60%',
-                      transform: 'translateX(-50%)'
-                    }}
-                  >
-                    {acc.emoji}
-                  </div>
-                ))}
-              </div>
+              {ownedAccessories.map((acc) => (
+                <div 
+                  key={acc.id}
+                  className="absolute text-5xl"
+                  style={{ 
+                    top: acc.position.top,
+                    left: acc.position.left,
+                    transform: 'translate(-50%, -50%)',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  {acc.emoji}
+                </div>
+              ))}
             </div>
 
-            <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="flex items-center justify-center gap-3 mb-2 mt-4">
               <h2 className="text-3xl font-bold">{ecobuddy.name}</h2>
               <span className="text-xs bg-brand-primary px-2 py-1 rounded-full">Lvl {ecobuddy.level || 1}</span>
             </div>
@@ -155,9 +157,9 @@ export default function Home() {
               <button 
                 onClick={handleFeed}
                 className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={user.points < 10}
+                disabled={seeds < 10}
               >
-                Feed 🍎 (10pts)
+                Feed 🍎 (10 🌱)
               </button>
               <button 
                 onClick={handlePlay}
@@ -179,7 +181,7 @@ export default function Home() {
         {showShop && (
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 mb-6">
             <h3 className="text-xl font-semibold mb-4">Accessory Shop</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {shopAccessories.map(accessory => (
                 <div 
                   key={accessory.id}
@@ -187,11 +189,11 @@ export default function Home() {
                 >
                   <div className="text-5xl mb-2">{accessory.emoji}</div>
                   <div className="font-semibold text-white mb-1">{accessory.name}</div>
-                  <div className="text-yellow-400 text-sm mb-3">{accessory.cost} points</div>
+                  <div className="text-yellow-400 text-sm mb-3">🌱 {accessory.cost}</div>
                   <button 
                     onClick={() => handleBuyAccessory(accessory)}
                     className="w-full px-3 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={user.points < accessory.cost}
+                    disabled={seeds < accessory.cost}
                   >
                     Buy
                   </button>
@@ -223,17 +225,19 @@ export default function Home() {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50 text-center hover:border-brand-primary/30 transition-colors">
-            <div className="text-4xl mb-2">📊</div>
-            <div className="font-semibold">Today's Usage</div>
-            <div className="text-2xl font-bold text-brand-primary mt-1">32 kWh</div>
-            <div className="text-xs text-slate-400 mt-1">↓ 8% from yesterday</div>
+            <div className="text-4xl mb-2">💰</div>
+            <div className="font-semibold">Total Savings</div>
+            <div className="text-2xl font-bold text-brand-primary mt-1">${user.totalSavings || 0}</div>
+            <div className="text-xs text-slate-400 mt-1">Keep up the great work!</div>
           </div>
 
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50 text-center hover:border-brand-primary/30 transition-colors">
             <div className="text-4xl mb-2">⚡</div>
             <div className="font-semibold">Active Tasks</div>
-            <div className="text-2xl font-bold text-yellow-400 mt-1">3</div>
-            <div className="text-xs text-slate-400 mt-1">Complete to earn rewards</div>
+            <div className="text-2xl font-bold text-yellow-400 mt-1">
+              {user.challenges?.filter(c => c.status === 'active').length || 0}
+            </div>
+            <div className="text-xs text-slate-400 mt-1">Complete to earn seeds</div>
           </div>
         </div>
       </div>
