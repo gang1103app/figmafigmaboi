@@ -34,9 +34,11 @@
 - Save → **Manual Deploy**
 
 ### Initialize Database:
-1. **Backend Shell** tab
-2. Run: `npm run db:migrate`
-3. Verify tables created
+**Automatic migration runs on backend startup!** Just verify:
+1. Check **Backend Logs** tab
+2. Look for migration success messages
+3. If needed, trigger manually: `curl -X POST https://your-backend-api.onrender.com/api/migrate`
+4. Or use **Backend Shell** (if available): `npm run db:migrate`
 
 ### Done! ✅
 Test at your frontend URL.
@@ -95,10 +97,16 @@ Update FRONTEND_URL=[frontend-url]
 Save (auto-redeploys)
 ```
 
-### Part 5: Database Migration
+### Part 5: Verify Database Migration
 ```
-Backend → Shell
-Run: npm run db:migrate
+Automatic migration runs on startup!
+Backend → Logs (check for migration success)
+
+If needed, trigger manually:
+curl -X POST https://your-backend-api.onrender.com/api/migrate
+
+Or via Shell (if available):
+Backend → Shell → npm run db:migrate
 ```
 
 ### Done! ✅
@@ -164,7 +172,10 @@ VITE_API_URL=https://your-backend.onrender.com/api  # Must include /api
 ## Essential Commands
 
 ```bash
-# Database migration (run in backend Shell)
+# Trigger database migration (via API - no shell needed)
+curl -X POST https://your-backend.onrender.com/api/migrate
+
+# Database migration (via Shell if available)
 npm run db:migrate
 
 # Check health
@@ -185,7 +196,7 @@ openssl rand -base64 32
 | API 404 | Set `VITE_API_URL` in frontend (must end with `/api`) |
 | DB error | Use Internal Database URL, verify database is "Available" |
 | Slow first request | Normal on free tier (30-60s spin-up time) |
-| Tables missing | Run `npm run db:migrate` in backend Shell |
+| Tables missing | Check logs for auto-migration, or trigger: `curl -X POST https://your-backend-api.onrender.com/api/migrate` |
 
 ---
 

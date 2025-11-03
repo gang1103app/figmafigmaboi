@@ -34,8 +34,10 @@ Use this checklist to verify your deployment on Render is working correctly.
 
 ### 1. Database Migration
 - [ ] Backend is deployed and running
-- [ ] Access Render Shell for backend service
-- [ ] Run migration command: `npm run db:migrate`
+- [ ] Check backend logs for automatic migration on startup
+- [ ] Verify migration success messages in logs
+- [ ] If needed, trigger migration via API: `curl -X POST https://your-backend-api.onrender.com/api/migrate`
+- [ ] Or if you have shell access, run: `npm run db:migrate`
 - [ ] Verify all tables created successfully
 - [ ] Check logs for any errors
 
