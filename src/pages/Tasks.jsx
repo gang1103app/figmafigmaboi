@@ -38,7 +38,7 @@ export default function Tasks() {
 
   const handleCompleteChallenge = async (challenge) => {
     try {
-      await api.completeChallenge(challenge.challenge_id || challenge.id)
+      await api.completeChallenge(challenge.challenge_id)
       
       // Award seeds
       const newSeeds = (user.seeds || 0) + challenge.points
@@ -54,9 +54,9 @@ export default function Tasks() {
     }
   }
 
-  const handleUpdateProgress = async (challengeId, newProgress) => {
+  const handleUpdateProgress = async (challenge, newProgress) => {
     try {
-      await api.updateChallengeProgress(challengeId, newProgress)
+      await api.updateChallengeProgress(challenge.challenge_id, newProgress)
       // Refresh user profile
       const response = await api.getProfile()
       updateUser(response.profile)
@@ -159,7 +159,7 @@ export default function Tasks() {
                           <div className="flex gap-2">
                             {!isComplete && progress < target && (
                               <button
-                                onClick={() => handleUpdateProgress(challenge.challenge_id || challenge.id, progress + 1)}
+                                onClick={() => handleUpdateProgress(challenge, progress + 1)}
                                 className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
                               >
                                 Mark Progress +1

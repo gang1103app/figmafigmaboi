@@ -146,6 +146,15 @@ export const createTables = async (exitOnComplete = true) => {
     `);
     console.log('✅ Friends table created');
     
+    // Create indexes for better query performance
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_friends_user_id ON user_friends(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_friends_friend_id ON user_friends(friend_id);
+      CREATE INDEX IF NOT EXISTS idx_user_challenges_user_id ON user_challenges(user_id);
+      CREATE INDEX IF NOT EXISTS idx_energy_usage_user_date ON energy_usage(user_id, date);
+    `);
+    console.log('✅ Database indexes created');
+    
     // Insert default achievements
     await client.query(`
       INSERT INTO achievements (name, description, icon, requirement_type, requirement_value)
