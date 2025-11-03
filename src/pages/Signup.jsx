@@ -21,7 +21,7 @@ export default function Signup() {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -42,8 +42,12 @@ export default function Signup() {
     }
 
     // Create account
-    signup(formData)
-    navigate('/home')
+    const result = await signup(formData)
+    if (result.success) {
+      navigate('/home')
+    } else {
+      setError(result.error || 'Signup failed')
+    }
   }
 
   return (

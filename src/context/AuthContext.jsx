@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import api from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -7,63 +8,57 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored user data on mount
-    const storedUser = localStorage.getItem('energyAppUser')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    // Check if user has a token and fetch user data
+    const token = localStorage.getItem('energyAppToken')
+    if (token) {
+      api.setToken(token)
+      fetchCurrentUser()
+    } else {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
-  const signup = (userData) => {
-    const newUser = {
-      id: Date.now(),
-      email: userData.email,
-      username: userData.username,
-      name: userData.name,
-      createdAt: new Date().toISOString(),
-      level: 1,
-      xp: 0,
-      points: 0,
-      savings: 0,
-      co2Saved: 0,
-      streak: 0,
-      ecobuddy: {
-        name: 'Sparky',
-        level: 1,
-        accessories: [],
-        mood: 'happy'
-      },
-      achievements: [],
-      friends: []
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await api.getCurrentUser()
+      setUser(response.user)
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
+      // Clear invalid token
+      api.logout()
+      localStorage.removeItem('energyAppToken')
+    } finally {
+      setLoading(false)
     }
-    localStorage.setItem('energyAppUser', JSON.stringify(newUser))
-    setUser(newUser)
-    return newUser
   }
 
-  const login = (email, password) => {
-    // In a real app, this would validate against a backend
-    const storedUser = localStorage.getItem('energyAppUser')
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      if (userData.email === email) {
-        setUser(userData)
-        return { success: true }
-      }
+  const signup = async (userData) => {
+    try {
+      const response = await api.signup(userData)
+      setUser(response.user)
+      return { success: true, user: response.user }
+    } catch (error) {
+      return { success: false, error: error.message }
     }
-    return { success: false, error: 'Invalid credentials' }
+  }
+
+  const login = async (email, password) => {
+    try {
+      const response = await api.login(email, password)
+      setUser(response.user)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }
 
   const logout = () => {
+    api.logout()
     setUser(null)
-    // Note: Not clearing localStorage to preserve user data
   }
 
   const updateUser = (updates) => {
-    const updatedUser = { ...user, ...updates }
-    localStorage.setItem('energyAppUser', JSON.stringify(updatedUser))
-    setUser(updatedUser)
+    setUser(prevUser => ({ ...prevUser, ...updates }))
   }
 
   const value = {
