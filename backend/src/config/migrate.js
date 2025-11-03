@@ -179,7 +179,9 @@ export const createTables = async (exitOnComplete = true) => {
 };
 
 // Run migration when called directly from CLI
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this file is being run directly (not imported)
+const isRunDirectly = process.argv[1] && process.argv[1].endsWith('migrate.js');
+if (isRunDirectly) {
   createTables(true).catch(err => {
     console.error('Fatal error:', err);
     process.exit(1);

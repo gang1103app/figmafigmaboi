@@ -57,10 +57,12 @@ app.get('/api/health', (req, res) => {
 });
 
 // Database migration endpoint (for users without shell access)
+// Note: This is intentionally public as it's safe to run multiple times
+// and is needed for users without shell access during initial deployment
 app.post('/api/migrate', async (req, res) => {
   try {
     console.log('🔄 Manual migration triggered via API endpoint...');
-    const result = await createTables(false);
+    await createTables(false);
     res.json({ 
       success: true,
       message: 'Database migration completed successfully',
