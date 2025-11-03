@@ -153,7 +153,7 @@ DEPLOYMENT_GUIDE_INDEX.md (You are here)
 For running the app locally (not deploying):
 
 1. See [README.md](./README.md) - "Local Development" section
-2. See [QUICKSTART.md](./QUICKSTART.md) (if exists)
+2. See [QUICKSTART.md](./QUICKSTART.md) for quick setup instructions
 3. Frontend only: `npm install && npm run dev`
 4. Full stack: See README.md for backend setup
 

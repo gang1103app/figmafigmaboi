@@ -755,7 +755,7 @@ You now have everything needed to deploy the Energy Saving Teen App to Render:
 
 **Estimated Total Time**: 15-30 minutes from start to working app.
 
-**Questions?** Check [BACKEND_DEPLOYMENT.md](BACKEND_DEPLOYMENT.md) or [DEPLOYMENT_VERIFICATION.md](DEPLOYMENT_VERIFICATION.md) for additional details.
+**Questions?** Check [BACKEND_DEPLOYMENT.md](./BACKEND_DEPLOYMENT.md) or [DEPLOYMENT_VERIFICATION.md](./DEPLOYMENT_VERIFICATION.md) for additional details.
 
 ---
 
