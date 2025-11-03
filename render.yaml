@@ -1,3 +1,16 @@
+# Render Blueprint for Energy Saving Teen App (v1.4)
+# 
+# This file automatically creates 3 services when deploying via Blueprint:
+# 1. PostgreSQL Database (energy-teen-db)
+# 2. Backend API (energy-teen-api) - Node.js/Express
+# 3. Frontend Static Site (energy-teen-app) - React/Vite
+#
+# IMPORTANT: After deployment, manually set these environment variables:
+#   - Backend: FRONTEND_URL (your deployed frontend URL)
+#   - Frontend: VITE_API_URL (your deployed backend URL + /api)
+#
+# See DEPLOY_TO_RENDER.md for complete deployment instructions.
+
 services:
   # PostgreSQL Database
   - type: pserv

@@ -1,5 +1,7 @@
 # Energy Saving Teen — Dashboard App (Vite + React + Tailwind + Backend)
 
+> 🚀 **Want to deploy to Render?** See **[DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** for complete deployment guide with all specific details.
+
 This repository contains a full-featured dashboard for the Energy Saving Teen app implemented with:
 - React + Vite (Frontend)
 - React Router for navigation

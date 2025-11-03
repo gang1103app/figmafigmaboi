@@ -1,14 +1,21 @@
 # Render Deployment Guide - Energy Saving Teen App
 
-This guide provides complete step-by-step instructions for deploying the Energy Saving Teen App to Render.
+⚠️ **IMPORTANT**: This guide is for **frontend-only deployment** (older versions on `main` branch).
+
+For **full-stack deployment** with backend and database (v1.4 on branch `1.4`), see:
+👉 **[DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** - Complete deployment guide with all details
+
+---
 
 ## Overview
 
-**Current Status:** This application is a **frontend-only** React + Vite static site with no backend.
+**This Guide Covers:** Frontend-only deployment (React + Vite static site)
 - All data is embedded client-side
 - No API server required
 - No database needed
 - Deploys as a static site on Render
+
+**Not Covered Here:** Backend API, PostgreSQL database, authentication (see DEPLOY_TO_RENDER.md for full-stack)
 
 ## Frontend Deployment (Static Site)
 
