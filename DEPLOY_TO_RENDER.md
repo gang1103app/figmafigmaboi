@@ -169,22 +169,34 @@ After all services are deployed:
 4. Click **"Save Changes"**
 5. Trigger **Manual Deploy** (required for static sites)
 
-#### D. Run Database Migration
+#### D. Verify Database Migration
+
+**Good news!** The database migration runs automatically when the backend starts. You just need to verify it completed successfully:
 
 1. Go to **Backend Service** (`energy-teen-api`)
-2. Click **"Shell"** tab (left sidebar)
-3. Run:
+2. Click **"Logs"** tab (left sidebar)
+3. Look for migration success messages:
+   ```
+   🔄 Running database migrations on startup...
+   ✅ Users table created
+   ✅ User progress table created
+   ✅ Challenges table created
+   ✅ Database migration completed successfully!
+   ```
+
+**If migration didn't run automatically**, you can trigger it manually:
+
+**Option 1: Via API (No shell access needed)**
+```bash
+curl -X POST https://your-backend-api.onrender.com/api/migrate
+```
+Replace with your actual backend URL. You should get a success response.
+
+**Option 2: Via Shell (If you have access)**
+1. Click **"Shell"** tab (left sidebar)
+2. Run:
    ```bash
    npm run db:migrate
-   ```
-4. Wait for confirmation that tables were created
-5. You should see output like:
-   ```
-   ✅ Created users table
-   ✅ Created user_progress table
-   ✅ Created challenges table
-   ✅ Created user_challenges table
-   Migration completed successfully!
    ```
 
 ### Step 8: Verify Deployment
@@ -310,21 +322,34 @@ Now that frontend is deployed, update backend to allow requests from it:
 5. Click **"Save Changes"**
 6. Backend will automatically redeploy (1-2 min)
 
-### Part 5: Initialize Database
+### Part 5: Verify Database Initialization
+
+**Good news!** The database migration runs automatically when the backend starts. You just need to verify it completed successfully:
 
 1. Go to **Backend Service** (`energy-teen-api`)
-2. Click **"Shell"** tab
-3. Run migration:
+2. Click **"Logs"** tab
+3. Verify migration success - look for:
+   ```
+   🔄 Running database migrations on startup...
+   ✅ Users table created
+   ✅ User progress table created
+   ✅ Challenges table created
+   ✅ Database migration completed successfully!
+   ```
+
+**If migration didn't run automatically**, you have two options:
+
+**Option 1: Trigger via API (No shell access needed)**
+```bash
+curl -X POST https://your-backend-api.onrender.com/api/migrate
+```
+Replace with your actual backend URL.
+
+**Option 2: Use Shell (If you have access)**
+1. Click **"Shell"** tab
+2. Run:
    ```bash
    npm run db:migrate
-   ```
-4. Verify success - you should see:
-   ```
-   ✅ Created users table
-   ✅ Created user_progress table
-   ✅ Created challenges table
-   ✅ Created user_challenges table
-   Migration completed successfully!
    ```
 
 **✅ Manual Deployment Complete!** Continue to [Post-Deployment Configuration](#post-deployment-configuration).
@@ -528,9 +553,15 @@ Your deployment is successful when:
 - Can't sign up
 
 **Solutions:**
-1. Go to backend Shell
-2. Run: `npm run db:migrate`
-3. Verify migration completed successfully
+1. Check backend logs to see if migration ran on startup
+2. If not, trigger migration via API (no shell needed):
+   ```bash
+   curl -X POST https://your-backend-api.onrender.com/api/migrate
+   ```
+3. Alternatively, if you have Shell access:
+   - Go to backend Shell
+   - Run: `npm run db:migrate`
+4. Verify migration completed successfully in logs
 
 #### ❌ Issue: Slow First Request (30-60 seconds)
 
@@ -645,7 +676,10 @@ Consider paid plans ($7/month per service) when you need:
 ### Essential Commands
 
 ```bash
-# Database migration
+# Trigger database migration (via API - no shell needed)
+curl -X POST https://your-backend.onrender.com/api/migrate
+
+# Database migration (via Shell if you have access)
 npm run db:migrate
 
 # Check backend health

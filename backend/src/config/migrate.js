@@ -1,6 +1,11 @@
 import pool from './database.js';
 
-const createTables = async () => {
+/**
+ * Creates database tables and inserts initial data
+ * Can be called from CLI or as a function from other modules
+ * @param {boolean} exitOnComplete - Whether to exit process after completion (default: true for CLI usage)
+ */
+export const createTables = async (exitOnComplete = true) => {
   const client = await pool.connect();
   
   try {
@@ -158,17 +163,27 @@ const createTables = async () => {
     await client.query('COMMIT');
     console.log('✅ Database migration completed successfully!');
     
+    return { success: true, message: 'Database migration completed successfully!' };
+    
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ Migration failed:', error);
     throw error;
   } finally {
     client.release();
-    await pool.end();
+    // Only close pool when running from CLI
+    if (exitOnComplete) {
+      await pool.end();
+    }
   }
 };
 
-createTables().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+// Run migration when called directly from CLI
+// Check if this file is being run directly (not imported)
+const isRunDirectly = process.argv[1] && process.argv[1].endsWith('migrate.js');
+if (isRunDirectly) {
+  createTables(true).catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}
