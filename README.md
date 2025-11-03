@@ -1,11 +1,12 @@
-# Energy Saving Teen — Dashboard App (Vite + React + Tailwind)
+# Energy Saving Teen — Dashboard App (Vite + React + Tailwind + Backend)
 
 This repository contains a full-featured dashboard for the Energy Saving Teen app implemented with:
-- React + Vite
+- React + Vite (Frontend)
 - React Router for navigation
 - Tailwind CSS (mobile-first)
 - Chart.js with React Chart.js 2 for data visualization
-- Client-side embedded data (no backend required)
+- **Express.js + PostgreSQL Backend (NEW in v1.4)**
+- **User Authentication & Data Persistence**
 
 ## Features
 
@@ -42,7 +43,9 @@ This repository contains a full-featured dashboard for the Energy Saving Teen ap
 - Smooth transitions between pages
 - Active route highlighting
 
-## Local development
+## Local Development
+
+### Frontend Only (Client-side mode)
 
 1. Install dependencies:
 ```bash
@@ -64,53 +67,154 @@ npm run build
 npm run preview
 ```
 
+### Full Stack Development (Frontend + Backend)
+
+#### Backend Setup
+
+1. Install backend dependencies:
+```bash
+cd backend
+npm install
+```
+
+2. Set up PostgreSQL database:
+```bash
+createdb energyteen
+```
+
+3. Create `.env` file in `backend/` directory:
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/energyteen
+JWT_SECRET=your-secret-key-here
+NODE_ENV=development
+PORT=3001
+FRONTEND_URL=http://localhost:5173
+```
+
+4. Run database migrations:
+```bash
+npm run db:migrate
+```
+
+5. Start backend server:
+```bash
+npm run dev
+```
+
+Backend will run on `http://localhost:3001`
+
+#### Frontend Setup
+
+1. Create `.env` file in root directory:
+```env
+VITE_API_URL=http://localhost:3001/api
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start frontend dev server:
+```bash
+npm run dev
+```
+
+Frontend will run on `http://localhost:5173`
+
+Now you can signup/login and all data will be saved to the database!
+
 ## Tech Stack
 
+### Frontend
 - **Frontend Framework**: React 18
 - **Build Tool**: Vite 5
 - **Routing**: React Router DOM v6
 - **Styling**: Tailwind CSS 3
 - **Charts**: Chart.js 4 + React Chart.js 2
-- **Data**: Client-side embedded (no API calls)
+
+### Backend (v1.4+)
+- **Framework**: Express.js
+- **Database**: PostgreSQL
+- **Authentication**: JWT (JSON Web Tokens)
+- **Password Hashing**: bcrypt
+- **Validation**: express-validator
 
 ## Project Structure
 
 ```
-src/
-├── components/
-│   ├── NavBottom.jsx       # Bottom navigation bar
-│   ├── KpiCard.jsx         # Key performance indicator card
-│   ├── ProgressBar.jsx     # Progress bar component
-│   ├── ChartLine.jsx       # Line chart component
-│   └── ChartPie.jsx        # Pie/doughnut chart component
-├── pages/
-│   ├── Analytics.jsx       # Analytics dashboard
-│   ├── Leaderboard.jsx     # Rankings and competition
-│   ├── Challenges.jsx      # Challenges and tasks
-│   └── Profile.jsx         # User profile and EcoBuddy
-├── App.jsx                 # Main app with routing
-├── main.jsx                # App entry point
-└── index.css               # Global styles
+├── backend/                 # Backend API (v1.4+)
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── database.js  # PostgreSQL configuration
+│   │   │   └── migrate.js   # Database migrations
+│   │   ├── middleware/
+│   │   │   └── auth.js      # JWT authentication
+│   │   ├── models/
+│   │   │   └── User.js      # User data model
+│   │   ├── routes/
+│   │   │   ├── auth.js      # Auth endpoints
+│   │   │   └── user.js      # User endpoints
+│   │   └── server.js        # Express server
+│   ├── package.json
+│   └── README.md
+│
+├── src/                     # Frontend
+│   ├── components/
+│   │   ├── NavBottom.jsx    # Bottom navigation bar
+│   │   ├── KpiCard.jsx      # Key performance indicator card
+│   │   ├── ProgressBar.jsx  # Progress bar component
+│   │   ├── ChartLine.jsx    # Line chart component
+│   │   └── ChartPie.jsx     # Pie/doughnut chart component
+│   ├── context/
+│   │   └── AuthContext.jsx  # Authentication context
+│   ├── pages/
+│   │   ├── Login.jsx        # Login page
+│   │   ├── Signup.jsx       # Signup page
+│   │   ├── Home.jsx         # Home dashboard
+│   │   ├── Analytics.jsx    # Analytics page
+│   │   ├── Leaderboard.jsx  # Rankings page
+│   │   ├── Tasks.jsx        # Challenges page
+│   │   └── Profile.jsx      # User profile page
+│   ├── services/
+│   │   └── api.js           # API service layer
+│   ├── App.jsx              # Main app with routing
+│   ├── main.jsx             # App entry point
+│   └── index.css            # Global styles
+│
+├── BACKEND_DEPLOYMENT.md    # Backend deployment guide
+├── render.yaml              # Render deployment config
+└── package.json
 ```
 
-## Notes about the implementation
+## Features (v1.4)
 
-- **Mobile-first**: Tailwind implementation optimized for mobile with responsive breakpoints
-- **Client-side data**: All data is embedded in components for demonstration purposes
-- **No backend required**: App runs entirely in the browser
-- **Chart visualization**: Interactive charts using Chart.js
-- **Smooth routing**: Client-side navigation with React Router
-- **Modern design**: Dark theme with gradient backgrounds and glassmorphism effects
+✅ **User Authentication**
+- Secure signup and login with JWT
+- Password hashing with bcrypt
+- Session management
+
+✅ **Data Persistence**
+- PostgreSQL database
+- User profiles saved permanently
+- Progress tracking across sessions
+
+✅ **Real Backend API**
+- RESTful API endpoints
+- User progress updates
+- Challenge management
+- Leaderboard functionality
+- Energy usage tracking
+
+✅ **Production Ready**
+- Deployable to Render
+- Environment variable configuration
+- CORS protection
+- Input validation
 
 ## Design Reference
 
 Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
-
-## Future Enhancements
-
-- Connect to real backend API for live data
-- User authentication and authorization
-- Real-time data synchronization
 - Push notifications for challenges
 - Social features (friends, sharing)
 - Data export and reporting
@@ -118,42 +222,72 @@ Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
 
 ## Deployment
 
-### Quick Deploy to Render
+### Full Stack Deployment to Render (v1.4+)
 
-This is a **frontend-only** static site with no backend required. To deploy:
+The application now requires both frontend and backend deployment with a PostgreSQL database.
 
-1. Sign in to [Render](https://render.com) and create a new **Static Site**
-2. Connect your GitHub repository (`gang1103app/figmafigmaboi`)
-3. Configure the Static Site settings:
-   - **Name**: `energy-teen-app` (or your preferred name)
-   - **Branch**: `main`
-   - **Build command**: `npm run build`
-   - **Publish directory**: `dist`
-4. Click "Create Static Site"
-5. Wait 2-5 minutes for build and deployment
-6. Access your live site at the provided Render URL
+#### Quick Deploy with render.yaml
 
-### Deployment Documentation
+1. Sign in to [Render](https://render.com)
+2. Click **"New +"** → **"Blueprint"**
+3. Connect your GitHub repository (`gang1103app/figmafigmaboi`)
+4. Select branch `1.4`
+5. Render will automatically detect `render.yaml` and create:
+   - PostgreSQL database
+   - Backend API service
+   - Frontend static site
+6. Set the environment variables manually:
+   - Backend: `FRONTEND_URL` (after frontend deploys)
+   - Frontend: `VITE_API_URL` (after backend deploys)
+7. Trigger redeploy after setting environment variables
 
-**📋 [RENDER_SETUP_SUMMARY.md](./RENDER_SETUP_SUMMARY.md)** - Start here! Quick overview and answers to common questions
+#### Manual Deployment
 
-**📖 [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Complete step-by-step deployment guide with:
-- Detailed configuration instructions
-- Troubleshooting common issues
-- Custom domain setup
-- Environment variables (for future backend integration)
-- Adding a backend service to Render
-- Cost estimation and monitoring
+For detailed step-by-step instructions, see:
 
-**✅ [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Printable checklist to use during deployment
+**📖 [BACKEND_DEPLOYMENT.md](./BACKEND_DEPLOYMENT.md)** - Complete backend deployment guide with:
+- PostgreSQL database setup
+- Backend API deployment
+- Database migration instructions
+- Environment variable configuration
+- Troubleshooting and monitoring
 
-### Important Notes
+**📋 [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Frontend deployment guide
 
-- ✅ **No backend required** - App runs entirely client-side
-- ✅ **No database needed** - All data is embedded
-- ✅ **No environment variables required**
-- ✅ **Automatic deployments** on git push
-- ✅ **Free tier available** on Render
+**📝 [backend/README.md](./backend/README.md)** - Backend API documentation
+
+### Deployment Architecture
+
+```
+┌─────────────────┐
+│   Frontend      │  Static Site (Vite + React)
+│   Render        │  https://your-app.onrender.com
+└────────┬────────┘
+         │
+         │ HTTPS API Calls
+         ▼
+┌─────────────────┐
+│   Backend API   │  Node.js + Express
+│   Render        │  https://your-api.onrender.com
+└────────┬────────┘
+         │
+         │ PostgreSQL Connection
+         ▼
+┌─────────────────┐
+│   Database      │  PostgreSQL
+│   Render        │  Managed Database
+└─────────────────┘
+```
+
+### Important Notes (v1.4+)
+
+- ⚠️ **Backend required** - App needs API to function
+- ⚠️ **Database required** - PostgreSQL for data persistence
+- ⚠️ **Environment variables required** - Set API URLs
+- ✅ **Automatic deployments** on git push to branch `1.4`
+- ✅ **Free tier available** on Render (with limitations)
+- ✅ **Secure authentication** with JWT tokens
+- ✅ **Data persistence** across sessions
 
 ## Contributing
 
