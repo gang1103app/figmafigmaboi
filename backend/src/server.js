@@ -3,19 +3,38 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+// CORS configuration
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
+
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // Request logging middleware
 app.use((req, res, next) => {

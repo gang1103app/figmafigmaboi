@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { writeLimiter } from '../middleware/rateLimiter.js';
 import pool from '../config/database.js';
 
 const router = express.Router();
@@ -25,6 +26,7 @@ router.get('/profile', async (req, res) => {
 
 // Update user progress
 router.patch('/progress',
+  writeLimiter,
   [
     body('level').optional().isInt({ min: 1 }),
     body('xp').optional().isInt({ min: 0 }),
@@ -52,6 +54,7 @@ router.patch('/progress',
 
 // Update EcoBuddy
 router.patch('/ecobuddy',
+  writeLimiter,
   [
     body('name').optional().isLength({ min: 1, max: 50 }),
     body('level').optional().isInt({ min: 1 }),
@@ -130,7 +133,7 @@ router.get('/challenges/available', async (req, res) => {
 });
 
 // Start a challenge
-router.post('/challenges/:challengeId/start', async (req, res) => {
+router.post('/challenges/:challengeId/start', writeLimiter, async (req, res) => {
   try {
     const { challengeId } = req.params;
     
@@ -159,6 +162,7 @@ router.post('/challenges/:challengeId/start', async (req, res) => {
 
 // Update challenge progress
 router.patch('/challenges/:challengeId/progress',
+  writeLimiter,
   [
     body('progress').isInt({ min: 0 })
   ],
@@ -192,7 +196,7 @@ router.patch('/challenges/:challengeId/progress',
 );
 
 // Complete a challenge
-router.post('/challenges/:challengeId/complete', async (req, res) => {
+router.post('/challenges/:challengeId/complete', writeLimiter, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -259,6 +263,7 @@ router.get('/leaderboard', async (req, res) => {
 
 // Log energy usage
 router.post('/energy-usage',
+  writeLimiter,
   [
     body('date').isISO8601().withMessage('Date must be in ISO 8601 format'),
     body('category').notEmpty(),

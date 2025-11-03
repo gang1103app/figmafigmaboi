@@ -2,11 +2,13 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
+import { authLimiter, loginLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Signup
 router.post('/signup',
+  authLimiter,
   [
     body('email').isEmail().withMessage('Invalid email address'),
     body('username').isLength({ min: 3, max: 50 }).withMessage('Username must be 3-50 characters'),
@@ -56,6 +58,7 @@ router.post('/signup',
 
 // Login
 router.post('/login',
+  loginLimiter,
   [
     body('email').isEmail().withMessage('Invalid email address'),
     body('password').notEmpty().withMessage('Password is required')
