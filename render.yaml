@@ -1,0 +1,64 @@
+# Render Blueprint for Energy Saving Teen App (v1.4)
+# 
+# This file automatically creates 3 services when deploying via Blueprint:
+# 1. PostgreSQL Database (energy-teen-db)
+# 2. Backend API (energy-teen-api) - Node.js/Express
+# 3. Frontend Static Site (energy-teen-app) - React/Vite
+#
+# IMPORTANT: After deployment, manually set these environment variables:
+#   - Backend: FRONTEND_URL (your deployed frontend URL)
+#   - Frontend: VITE_API_URL (your deployed backend URL + /api)
+#
+# See DEPLOY_TO_RENDER.md for complete deployment instructions.
+
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: energy-teen-db
+    plan: free
+    databaseName: energyteen
+    databaseUser: energyteen
+    region: oregon
+
+  # Backend API
+  - type: web
+    name: energy-teen-api
+    runtime: node
+    plan: free
+    branch: 1.4
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: energy-teen-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        sync: false  # Set manually after frontend deployment
+    healthCheckPath: /api/health
+
+  # Frontend Static Site
+  - type: web
+    name: energy-teen-app
+    runtime: static
+    plan: free
+    branch: 1.4
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # Set manually after backend deployment
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

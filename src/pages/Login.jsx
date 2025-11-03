@@ -9,7 +9,7 @@ export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -18,7 +18,7 @@ export default function Login() {
       return
     }
 
-    const result = login(email, password)
+    const result = await login(email, password)
     if (result.success) {
       navigate('/home')
     } else {
