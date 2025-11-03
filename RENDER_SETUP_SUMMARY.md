@@ -1,5 +1,41 @@
 # Render Setup Summary - Energy Saving Teen App
 
+⚠️ **IMPORTANT UPDATE**: This summary is outdated.
+
+## 🚀 For Complete Deployment Instructions
+
+👉 **See [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** - Complete guide with ALL specific details for deploying to Render.
+
+That guide covers:
+- Full-stack deployment (Frontend + Backend + Database)
+- Two deployment options (Blueprint & Manual)
+- All environment variables with exact values
+- Step-by-step verification
+- Troubleshooting common issues
+- Cost information
+
+---
+
+## Quick Summary (v1.4)
+
+**Current State:** Full-stack application with backend and database
+
+### What Gets Deployed:
+1. **PostgreSQL Database** - User data storage
+2. **Backend API** (Node.js + Express) - `/backend` directory
+3. **Frontend** (React + Vite) - Root directory
+
+### Branch:
+- Use branch **`1.4`** for full-stack deployment with backend
+- Use branch **`main`** for frontend-only (older version)
+
+---
+
+## Old Information Below (For Reference Only)
+
+<details>
+<summary>Click to expand old frontend-only info</summary>
+
 ## 📋 What You Need to Know
 
 This document provides a quick overview of deploying the Energy Saving Teen App to Render.
@@ -19,12 +55,14 @@ This is a **static site** that needs to be deployed as a Render Static Site.
 - Publish Directory: `dist`
 - No environment variables needed
 
-### Backend: ❌ Not Applicable
-There is **NO backend** in this repository. The app:
+### Backend: ❌ Not Applicable (OLD - v1.4 HAS BACKEND)
+There is **NO backend** in old versions. The app:
 - Runs entirely in the browser (client-side)
 - Has all data embedded in the code
 - Makes no API calls
 - Requires no database
+
+**v1.4 UPDATE:** Backend now exists on branch `1.4`. See DEPLOY_TO_RENDER.md for full details.
 
 ---
 
