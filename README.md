@@ -224,39 +224,36 @@ Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
 
 ## Deployment
 
-### Full Stack Deployment to Render (v1.4+)
+### 🚀 Deploy to Render (v1.4+)
 
-The application now requires both frontend and backend deployment with a PostgreSQL database.
+**📖 Complete Guide: [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** ← **START HERE for all deployment details**
 
-#### Quick Deploy with render.yaml
+This comprehensive guide includes:
+- ✅ Two deployment options (Blueprint & Manual with exact steps)
+- ✅ All environment variables with exact values
+- ✅ Database setup and migration instructions
+- ✅ Complete troubleshooting section
+- ✅ Cost breakdown and free tier information
+- ✅ Verification procedures
 
-1. Sign in to [Render](https://render.com)
-2. Click **"New +"** → **"Blueprint"**
-3. Connect your GitHub repository (`gang1103app/figmafigmaboi`)
-4. Select branch `1.4`
-5. Render will automatically detect `render.yaml` and create:
-   - PostgreSQL database
-   - Backend API service
-   - Frontend static site
-6. Set the environment variables manually:
-   - Backend: `FRONTEND_URL` (after frontend deploys)
-   - Frontend: `VITE_API_URL` (after backend deploys)
-7. Trigger redeploy after setting environment variables
+**🎯 Quick Reference: [DEPLOY_QUICK_REFERENCE.md](./DEPLOY_QUICK_REFERENCE.md)** ← For experienced users
 
-#### Manual Deployment
+**📑 All Guides: [DEPLOYMENT_GUIDE_INDEX.md](./DEPLOYMENT_GUIDE_INDEX.md)** ← Navigation to all deployment docs
 
-For detailed step-by-step instructions, see:
+### Quick Deploy Summary
 
-**📖 [BACKEND_DEPLOYMENT.md](./BACKEND_DEPLOYMENT.md)** - Complete backend deployment guide with:
-- PostgreSQL database setup
-- Backend API deployment
-- Database migration instructions
-- Environment variable configuration
-- Troubleshooting and monitoring
+The application requires full-stack deployment:
 
-**📋 [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Frontend deployment guide
+1. **Sign in to [Render](https://render.com)**
+2. **New + → Blueprint**
+3. **Connect repository** (`gang1103app/figmafigmaboi`)
+4. **Select branch** `1.4`
+5. **Configure environment variables** (see complete guide)
+6. **Run database migration** via backend Shell
 
-**📝 [backend/README.md](./backend/README.md)** - Backend API documentation
+**Time:** 15-30 minutes | **Cost:** Free tier available
+
+See [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md) for complete step-by-step instructions with all specific details.
 
 ### Deployment Architecture
 
