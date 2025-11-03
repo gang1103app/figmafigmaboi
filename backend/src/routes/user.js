@@ -260,7 +260,7 @@ router.get('/leaderboard', async (req, res) => {
 // Log energy usage
 router.post('/energy-usage',
   [
-    body('date').isDate(),
+    body('date').isISO8601().withMessage('Date must be in ISO 8601 format'),
     body('category').notEmpty(),
     body('usage_kwh').isFloat({ min: 0 }),
     body('savings_kwh').optional().isFloat({ min: 0 })
