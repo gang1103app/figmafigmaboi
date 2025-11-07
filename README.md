@@ -55,6 +55,20 @@ This repository contains EcoBuddy, a full-featured energy-saving dashboard app w
 
 ## Local Development
 
+### Quick Diagnostic (Recommended First Step)
+
+Before starting development, run the diagnostic tool to check your environment:
+
+```bash
+npm run diagnostic
+```
+
+This will check:
+- Node.js version
+- Environment variables
+- Dependencies
+- Configuration files
+
 ### Frontend Only (Client-side mode)
 
 1. Install dependencies:
