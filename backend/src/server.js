@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { createTables } from './config/migrate.js';
+import { testConnection } from './config/database.js';
 
 dotenv.config();
 
@@ -51,12 +52,44 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Energy Teen API is running',
-    timestamp: new Date().toISOString()
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Basic health check
+    const health = {
+      status: 'ok',
+      message: 'Energy Teen API is running',
+      timestamp: new Date().toISOString()
+    };
+    
+    // Try to check database connection
+    try {
+      const { testConnection } = await import('./config/database.js');
+      const isConnected = await testConnection();
+      health.database = isConnected ? 'connected' : 'disconnected';
+      
+      // Check if tables exist
+      if (isConnected) {
+        const pool = (await import('./config/database.js')).default;
+        const result = await pool.query(
+          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('users', 'user_progress', 'user_ecobuddy')"
+        );
+        health.tables = result.rows.map(row => row.table_name);
+        health.tablesReady = result.rows.length === 3;
+      }
+    } catch (dbError) {
+      health.database = 'error';
+      health.databaseError = dbError.message;
+    }
+    
+    res.json(health);
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Health check failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Database migration endpoint (for users without shell access)
@@ -111,10 +144,17 @@ app.use((req, res) => {
 // Initialize database on startup
 const initializeDatabase = async () => {
   try {
+    // Test connection first
+    console.log('🔍 Testing database connection...');
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Failed to connect to database');
+    }
+    
     console.log('🔄 Running database migrations on startup...');
     await createTables(false);
   } catch (error) {
-    console.error('⚠️  Warning: Database migration failed on startup:', error.message);
+    console.error('⚠️  Warning: Database migration failed on startup:', error);
     console.log('💡 You can manually trigger migration by sending a POST request to /api/migrate');
   }
 };
