@@ -270,6 +270,7 @@ curl -X POST http://localhost:3001/api/auth/signup \
 
 ## Need Help?
 
+- **Having issues?** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for solutions to common problems
 - Check the detailed [README.md](README.md)
 - Review [BACKEND_DEPLOYMENT.md](BACKEND_DEPLOYMENT.md) for Render deployment
 - Open an issue on GitHub

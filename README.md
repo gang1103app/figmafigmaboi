@@ -1,6 +1,8 @@
 # EcoBuddy — Your Energy Saving Companion (v1.5)
 
 > 🚀 **Want to deploy to Render?** See **[DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** for complete deployment guide with all specific details.
+> 
+> ⚠️ **Having issues?** See **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** for solutions to common problems.
 
 This repository contains EcoBuddy, a full-featured energy-saving dashboard app with:
 - React + Vite (Frontend)
