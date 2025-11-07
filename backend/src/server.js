@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { createTables } from './config/migrate.js';
+import { testConnection } from './config/database.js';
 
 dotenv.config();
 
@@ -111,6 +112,13 @@ app.use((req, res) => {
 // Initialize database on startup
 const initializeDatabase = async () => {
   try {
+    // Test connection first
+    console.log('🔍 Testing database connection...');
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('Failed to connect to database');
+    }
+    
     console.log('🔄 Running database migrations on startup...');
     await createTables(false);
   } catch (error) {

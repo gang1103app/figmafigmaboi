@@ -50,9 +50,26 @@ router.post('/signup',
       });
     } catch (error) {
       console.error('Signup error:', error);
-      if (error.code === '23505') { // PostgreSQL unique violation
+      
+      // Handle specific PostgreSQL errors
+      if (error.code === '23505') { // Unique violation
         return res.status(400).json({ error: 'Email or username already exists' });
       }
+      
+      if (error.code === '42P01') { // Table does not exist
+        return res.status(503).json({ 
+          error: 'Database not ready. Please try again in a moment.',
+          details: 'The database tables have not been created yet. An administrator needs to run the database migration.'
+        });
+      }
+      
+      // Generic database errors
+      if (error.code && error.code.startsWith('42')) {
+        return res.status(503).json({ 
+          error: 'Database configuration error. Please contact support.' 
+        });
+      }
+      
       res.status(500).json({ error: 'Server error during signup' });
     }
   }
