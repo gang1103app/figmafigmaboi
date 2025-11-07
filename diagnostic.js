@@ -87,7 +87,6 @@ async function checkEnvironment() {
   }
 
   // Check frontend dependencies
-  const packageJsonPath = join(__dirname, 'package.json');
   const nodeModulesPath = join(__dirname, 'node_modules');
   
   if (existsSync(nodeModulesPath)) {
