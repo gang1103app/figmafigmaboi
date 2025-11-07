@@ -154,6 +154,10 @@ async function checkEnvironment() {
     log('1. Start backend: cd backend && npm run dev');
     log('2. Start frontend: npm run dev (in another terminal)');
     log('3. Visit: http://localhost:5173');
+    log('\nIf you still encounter issues:');
+    log('- Check TROUBLESHOOTING.md for specific error solutions');
+    log('- Verify PostgreSQL is running and accessible');
+    log('- Test backend: curl http://localhost:3001/api/health');
   }
 }
 
