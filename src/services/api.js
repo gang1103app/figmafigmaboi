@@ -64,6 +64,12 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle validation errors array
+        if (data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors.map(err => err.msg).join(', ');
+          throw new Error(errorMessages);
+        }
+        // Handle single error message
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 

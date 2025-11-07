@@ -16,8 +16,10 @@ router.post('/signup',
     body('name').notEmpty().withMessage('Name is required')
   ],
   async (req, res) => {
+    console.log('Signup request received. Body keys:', Object.keys(req.body));
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.error('Signup validation failed:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 

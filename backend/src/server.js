@@ -114,7 +114,7 @@ const initializeDatabase = async () => {
     console.log('🔄 Running database migrations on startup...');
     await createTables(false);
   } catch (error) {
-    console.error('⚠️  Warning: Database migration failed on startup:', error.message);
+    console.error('⚠️  Warning: Database migration failed on startup:', error);
     console.log('💡 You can manually trigger migration by sending a POST request to /api/migrate');
   }
 };
