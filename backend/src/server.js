@@ -1,172 +1,48 @@
-import express from 'express';
-import cors from 'cors';
+// ...existing imports...
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/user.js';
-import { apiLimiter } from './middleware/rateLimiter.js';
-import { createTables } from './config/migrate.js';
-import { testConnection } from './config/database.js';
+import { testConnection } from './config/database.js'; // adjust path if different
+import fetch from 'node-fetch'; // if needed for migrations
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+// Example initializeDatabase with retries/backoff and clearer logs
+const initializeDatabase = async ({ maxRetries = 5, initialDelayMs = 1000 } = {}) => {
+  let attempt = 0;
+  let delay = initialDelayMs;
 
-// Trust proxy - required when behind a reverse proxy (like Render)
-app.set('trust proxy', 1);
+  // parse and log host early
+  const connectionString = process.env.DATABASE_URL || process.env.PG_CONNECTION_STRING || '';
+  let dbHost = 'unknown';
+  try { dbHost = new URL(connectionString).hostname; } catch (e) {}
 
-// CORS configuration
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
-  : ['http://localhost:5173'];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+  while (attempt < maxRetries) {
+    attempt += 1;
+    console.log(`Attempt ${attempt}/${maxRetries} - testing DB connection to host=${dbHost}...`);
+    const ok = await testConnection();
+    if (ok) {
+      console.log('Database initialization succeeded.');
+      return;
     }
-  },
-  credentials: true
-}));
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-
-// Health check
-app.get('/api/health', async (req, res) => {
-  try {
-    // Basic health check
-    const health = {
-      status: 'ok',
-      message: 'Energy Teen API is running',
-      timestamp: new Date().toISOString()
-    };
-    
-    // Try to check database connection
-    try {
-      const { testConnection } = await import('./config/database.js');
-      const isConnected = await testConnection();
-      health.database = isConnected ? 'connected' : 'disconnected';
-      
-      // Check if tables exist
-      if (isConnected) {
-        const pool = (await import('./config/database.js')).default;
-        const result = await pool.query(
-          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('users', 'user_progress', 'user_ecobuddy')"
-        );
-        health.tables = result.rows.map(row => row.table_name);
-        health.tablesReady = result.rows.length === 3;
-      }
-    } catch (dbError) {
-      health.database = 'error';
-      health.databaseError = dbError.message;
-    }
-    
-    res.json(health);
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: 'Health check failed',
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
+    console.warn(`DB test attempt ${attempt} failed — waiting ${delay}ms before retrying...`);
+    // sleep
+    await new Promise((res) => setTimeout(res, delay));
+    delay *= 2; // exponential backoff
   }
-});
-
-// Database migration endpoint (for users without shell access)
-// Note: This is intentionally public as it's safe to run multiple times
-// and is needed for users without shell access during initial deployment
-app.post('/api/migrate', async (req, res) => {
-  try {
-    console.log('🔄 Manual migration triggered via API endpoint...');
-    await createTables(false);
-    res.json({ 
-      success: true,
-      message: 'Database migration completed successfully',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Migration error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Migration failed',
-      message: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Energy Teen API',
-    version: '1.4.0',
-    endpoints: {
-      health: '/api/health',
-      auth: '/api/auth',
-      user: '/api/user'
-    }
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
-
-// Initialize database on startup
-const initializeDatabase = async () => {
-  try {
-    // Test connection first
-    console.log('🔍 Testing database connection...');
-    const isConnected = await testConnection();
-    if (!isConnected) {
-      throw new Error('Failed to connect to database');
-    }
-    
-    console.log('🔄 Running database migrations on startup...');
-    await createTables(false);
-  } catch (error) {
-    console.error('⚠️  Warning: Database migration failed on startup:', error);
-    console.log('💡 You can manually trigger migration by sending a POST request to /api/migrate');
-  }
+  // If we reach here, we couldn't connect
+  const err = new Error('Failed to connect to database after retries');
+  console.error('⚠️  Warning: Database migration failed on startup:', err);
+  throw err;
 };
 
-// Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 Energy Teen API server running on port ${PORT}`);
-  console.log(`📍 API available at http://localhost:${PORT}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  
-  // Run migrations after server starts
-  await initializeDatabase();
-});
-
-export default app;
+// call initializeDatabase during server bootstrap (existing code likely does that)
+(async () => {
+  try {
+    await initializeDatabase();
+    // continue with migrations / server start - existing code
+  } catch (err) {
+    console.error('Initialization error (db):', err && err.message ? err.message : err);
+    // If you want the process to continue without DB, handle accordingly.
+    // Current behavior: propagate/exit to avoid partially started service.
+    process.exitCode = 1;
+  }
+})();
