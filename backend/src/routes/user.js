@@ -480,12 +480,12 @@ router.get('/leaderboard/friends', async (req, res) => {
 
 // Search users by username
 router.get('/search',
-  [body('query').optional().isString()],
   async (req, res) => {
     try {
-      const { query } = req.query;
+      const query = req.query.query;
       
-      if (!query || query.length < 2) {
+      // Validate query is a string and has minimum length
+      if (typeof query !== 'string' || query.length < 2) {
         return res.json({ users: [] });
       }
       
