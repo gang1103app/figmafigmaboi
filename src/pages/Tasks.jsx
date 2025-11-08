@@ -157,7 +157,15 @@ export default function Tasks() {
                             Reward: <span className="text-yellow-400 font-semibold">🌱 {challenge.points} seeds</span>
                           </span>
                           <div className="flex gap-2">
-                            {!isComplete && progress < target && (
+                            {!isComplete && target === 1 && (
+                              <button
+                                onClick={() => handleCompleteChallenge(challenge)}
+                                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Complete 🌱
+                              </button>
+                            )}
+                            {!isComplete && target > 1 && progress < target && (
                               <button
                                 onClick={() => handleUpdateProgress(challenge, progress + 1)}
                                 className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
@@ -165,7 +173,7 @@ export default function Tasks() {
                                 Mark Progress +1
                               </button>
                             )}
-                            {isComplete && (
+                            {isComplete && target > 1 && (
                               <button
                                 onClick={() => handleCompleteChallenge(challenge)}
                                 className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors"

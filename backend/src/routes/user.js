@@ -220,18 +220,30 @@ router.post('/challenges/:challengeId/complete', writeLimiter, async (req, res) 
       WHERE user_id = $2 AND challenge_id = $3
     `, [challenge.points, req.user.userId, challengeId]);
 
-    // Update user points
+    // Update user points and seeds
     await client.query(`
       UPDATE user_progress
-      SET points = points + $1, xp = xp + $2
+      SET points = points + $1, xp = xp + $2, seeds = seeds + $1
       WHERE user_id = $3
     `, [challenge.points, challenge.points * 2, req.user.userId]);
+
+    // Update daily progress
+    await client.query(`
+      INSERT INTO user_daily_progress (user_id, date, tasks_completed, seeds_earned)
+      VALUES ($1, CURRENT_DATE, 1, $2)
+      ON CONFLICT (user_id, date) 
+      DO UPDATE SET 
+        tasks_completed = user_daily_progress.tasks_completed + 1,
+        seeds_earned = user_daily_progress.seeds_earned + $2,
+        updated_at = CURRENT_TIMESTAMP
+    `, [req.user.userId, challenge.points]);
 
     await client.query('COMMIT');
     res.json({ 
       message: 'Challenge completed!', 
       pointsEarned: challenge.points,
-      xpEarned: challenge.points * 2
+      xpEarned: challenge.points * 2,
+      seedsEarned: challenge.points
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -440,5 +452,116 @@ router.get('/leaderboard/friends', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Get leaderboard with friends
+router.get('/leaderboard/friends', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.username, up.level, up.seeds, up.streak,
+              ue.accessories, ue.mood,
+              (SELECT COUNT(*) FROM user_challenges uc WHERE uc.user_id = u.id AND uc.status = 'completed') as completed_tasks,
+              COALESCE((SELECT tasks_completed FROM user_daily_progress WHERE user_id = u.id AND date = CURRENT_DATE), 0) as daily_progress
+       FROM users u
+       JOIN user_progress up ON u.id = up.user_id
+       JOIN user_ecobuddy ue ON u.id = ue.user_id
+       WHERE u.id = $1 OR u.id IN (
+         SELECT friend_id FROM user_friends WHERE user_id = $1 AND status = 'accepted'
+       )
+       ORDER BY completed_tasks DESC, up.seeds DESC
+       LIMIT 50`,
+      [req.user.userId]
+    );
+    res.json({ leaderboard: result.rows });
+  } catch (error) {
+    console.error('Get friends leaderboard error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Search users by username
+router.get('/search',
+  [body('query').optional().isString()],
+  async (req, res) => {
+    try {
+      const { query } = req.query;
+      
+      if (!query || query.length < 2) {
+        return res.json({ users: [] });
+      }
+      
+      const result = await pool.query(
+        `SELECT u.id, u.name, u.username, up.level, up.seeds
+         FROM users u
+         JOIN user_progress up ON u.id = up.user_id
+         WHERE u.id != $1 AND (
+           LOWER(u.username) LIKE LOWER($2) OR 
+           LOWER(u.name) LIKE LOWER($2)
+         )
+         LIMIT 20`,
+        [req.user.userId, `%${query}%`]
+      );
+      
+      res.json({ users: result.rows });
+    } catch (error) {
+      console.error('Search users error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Energy survey endpoints
+router.get('/survey', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM user_energy_survey WHERE user_id = $1',
+      [req.user.userId]
+    );
+    res.json({ survey: result.rows[0] || null });
+  } catch (error) {
+    console.error('Get survey error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/survey',
+  writeLimiter,
+  [
+    body('location').notEmpty(),
+    body('state_code').isLength({ min: 2, max: 10 }),
+    body('electricity_rate').isFloat({ min: 0 }),
+    body('household_size').isInt({ min: 1 }),
+    body('home_type').notEmpty(),
+    body('heating_type').optional(),
+    body('cooling_type').optional()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { location, state_code, electricity_rate, household_size, home_type, heating_type, cooling_type } = req.body;
+      
+      const result = await pool.query(
+        `INSERT INTO user_energy_survey 
+         (user_id, location, state_code, electricity_rate, household_size, home_type, heating_type, cooling_type)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (user_id) 
+         DO UPDATE SET 
+           location = $2, state_code = $3, electricity_rate = $4, 
+           household_size = $5, home_type = $6, heating_type = $7, 
+           cooling_type = $8, updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        [req.user.userId, location, state_code, electricity_rate, household_size, home_type, heating_type, cooling_type]
+      );
+      
+      res.json({ message: 'Survey completed successfully', survey: result.rows[0] });
+    } catch (error) {
+      console.error('Save survey error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
 
 export default router;
