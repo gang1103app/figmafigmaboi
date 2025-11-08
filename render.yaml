@@ -11,15 +11,15 @@
 #
 # See DEPLOY_TO_RENDER.md for complete deployment instructions.
 
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: energy-teen-db
+# PostgreSQL Database
+databases:
+  - name: energy-teen-db
     plan: free
     databaseName: energyteen
-    databaseUser: energyteen
+    user: energyteen
     region: oregon
 
+services:
   # Backend API
   - type: web
     name: energy-teen-api
