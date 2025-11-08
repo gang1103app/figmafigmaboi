@@ -8,10 +8,25 @@ export default function Social() {
   const [friends, setFriends] = useState([])
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     loadData()
   }, [activeTab])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.length >= 2) {
+        searchForUsers()
+      } else {
+        setSearchResults([])
+      }
+    }, 300)
+    
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const loadData = async () => {
     setLoading(true)
@@ -27,6 +42,32 @@ export default function Social() {
       console.error('Failed to load data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const searchForUsers = async () => {
+    setSearching(true)
+    try {
+      const response = await api.searchUsers(searchQuery)
+      setSearchResults(response.users || [])
+    } catch (error) {
+      console.error('Search failed:', error)
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const handleAddFriend = async (friendId) => {
+    try {
+      await api.addFriend(friendId)
+      // Reload friends list
+      await loadData()
+      // Clear search
+      setSearchQuery('')
+      setSearchResults([])
+    } catch (error) {
+      console.error('Failed to add friend:', error)
+      alert(error.message || 'Failed to add friend')
     }
   }
 
@@ -63,9 +104,19 @@ export default function Social() {
           >
             Friends ({friends.length})
           </button>
+          <button
+            onClick={() => setActiveTab('add')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'add'
+                ? 'bg-brand-primary text-white'
+                : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Add Friends
+          </button>
         </div>
 
-        {loading && (
+        {loading && activeTab !== 'add' && (
           <div className="text-center py-12 text-slate-400">
             <div className="text-xl">Loading...</div>
           </div>
@@ -92,6 +143,7 @@ export default function Social() {
                 {leaderboard.map((person, index) => {
                   const isCurrentUser = person.id === user.id
                   const rank = index + 1
+                  const accessories = person.accessories ? JSON.parse(person.accessories) : []
                   
                   return (
                     <div
@@ -122,8 +174,18 @@ export default function Social() {
                             alt="EcoBuddy" 
                             className="w-full h-full object-contain opacity-80"
                           />
-                          {person.mood === 'happy' && <div className="absolute top-0 right-0 text-lg">😊</div>}
-                          {person.mood === 'excited' && <div className="absolute top-0 right-0 text-lg">🤩</div>}
+                          {accessories.includes('sunglasses') && (
+                            <div className="absolute top-[28%] left-1/2 transform -translate-x-1/2 text-xl">🕶️</div>
+                          )}
+                          {accessories.includes('tophat') && (
+                            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 text-xl">🎩</div>
+                          )}
+                          {accessories.includes('crown') && (
+                            <div className="absolute top-[8%] left-1/2 transform -translate-x-1/2 text-xl">👑</div>
+                          )}
+                          {accessories.includes('scarf') && (
+                            <div className="absolute top-[55%] left-1/2 transform -translate-x-1/2 text-xl">🧣</div>
+                          )}
                         </div>
 
                         {/* User Info */}
@@ -165,42 +227,125 @@ export default function Social() {
               </div>
             ) : (
               <div className="space-y-3">
-                {friends.map(friend => (
-                  <div
-                    key={friend.id}
-                    className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-16 h-16">
-                        <img 
-                          src="/EcoBuddyTransparent_cropped.png" 
-                          alt="EcoBuddy" 
-                          className="w-full h-full object-contain opacity-80"
-                        />
-                        {friend.mood === 'happy' && <div className="absolute top-0 right-0 text-lg">😊</div>}
-                        {friend.mood === 'excited' && <div className="absolute top-0 right-0 text-lg">🤩</div>}
-                      </div>
+                {friends.map(friend => {
+                  const accessories = friend.accessories ? JSON.parse(friend.accessories) : []
+                  
+                  return (
+                    <div
+                      key={friend.id}
+                      className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-16 h-16">
+                          <img 
+                            src="/EcoBuddyTransparent_cropped.png" 
+                            alt="EcoBuddy" 
+                            className="w-full h-full object-contain opacity-80"
+                          />
+                          {accessories.includes('sunglasses') && (
+                            <div className="absolute top-[28%] left-1/2 transform -translate-x-1/2 text-xl">🕶️</div>
+                          )}
+                          {accessories.includes('tophat') && (
+                            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 text-xl">🎩</div>
+                          )}
+                          {accessories.includes('crown') && (
+                            <div className="absolute top-[8%] left-1/2 transform -translate-x-1/2 text-xl">👑</div>
+                          )}
+                          {accessories.includes('scarf') && (
+                            <div className="absolute top-[55%] left-1/2 transform -translate-x-1/2 text-xl">🧣</div>
+                          )}
+                        </div>
 
-                      <div className="flex-grow">
-                        <div className="font-semibold text-white">{friend.name}</div>
-                        <div className="text-sm text-slate-400">@{friend.username}</div>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                          <span>Level {friend.level}</span>
-                          <span>•</span>
-                          <span>🌱 {friend.seeds || 0} seeds</span>
-                          <span>•</span>
-                          <span>🔥 {friend.streak || 0} days</span>
+                        <div className="flex-grow">
+                          <div className="font-semibold text-white">{friend.name}</div>
+                          <div className="text-sm text-slate-400">@{friend.username}</div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                            <span>Level {friend.level}</span>
+                            <span>•</span>
+                            <span>🌱 {friend.seeds || 0} seeds</span>
+                            <span>•</span>
+                            <span>🔥 {friend.streak || 0} days</span>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
-                      <div className="flex flex-col gap-2">
-                        <button className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
-                          View Profile
+        {/* Add Friends Tab */}
+        {activeTab === 'add' && (
+          <div className="space-y-4">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+              <h3 className="text-lg font-semibold mb-4">Search for Friends</h3>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by username or name..."
+                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-brand-primary transition-colors"
+              />
+            </div>
+
+            {searching && (
+              <div className="text-center py-8 text-slate-400">
+                Searching...
+              </div>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="space-y-3">
+                {searchResults.map(result => {
+                  const isFriend = friends.some(f => f.id === result.id)
+                  
+                  return (
+                    <div
+                      key={result.id}
+                      className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-12 h-12">
+                          <img 
+                            src="/EcoBuddyTransparent_cropped.png" 
+                            alt="EcoBuddy" 
+                            className="w-full h-full object-contain opacity-80"
+                          />
+                        </div>
+
+                        <div className="flex-grow">
+                          <div className="font-semibold text-white">{result.name}</div>
+                          <div className="text-sm text-slate-400">@{result.username} • Level {result.level}</div>
+                        </div>
+
+                        <button
+                          onClick={() => handleAddFriend(result.id)}
+                          disabled={isFriend}
+                          className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isFriend ? 'Friends ✓' : 'Add Friend'}
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
+              </div>
+            )}
+
+            {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+              <div className="text-center py-12 text-slate-400">
+                <div className="text-5xl mb-4">🔍</div>
+                <p>No users found matching "{searchQuery}"</p>
+              </div>
+            )}
+
+            {searchQuery.length < 2 && (
+              <div className="text-center py-12 text-slate-400">
+                <div className="text-5xl mb-4">👥</div>
+                <p className="mb-2">Search for friends to add</p>
+                <p className="text-sm">Enter at least 2 characters to search</p>
               </div>
             )}
           </div>

@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import api from '../services/api'
+import EnergySurvey from '../components/EnergySurvey'
 
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
@@ -11,6 +13,24 @@ export default function Settings() {
     friends: false,
     achievements: true
   })
+  const [showSurvey, setShowSurvey] = useState(false)
+  const [survey, setSurvey] = useState(null)
+  const [loadingSurvey, setLoadingSurvey] = useState(true)
+
+  useEffect(() => {
+    loadSurvey()
+  }, [])
+
+  const loadSurvey = async () => {
+    try {
+      const response = await api.getSurvey()
+      setSurvey(response.survey)
+    } catch (error) {
+      console.error('Failed to load survey:', error)
+    } finally {
+      setLoadingSurvey(false)
+    }
+  }
 
   if (!user) return null
 
@@ -26,6 +46,11 @@ export default function Settings() {
     }))
   }
 
+  const handleSurveyComplete = async () => {
+    setShowSurvey(false)
+    await loadSurvey()
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
       <div className="container max-w-5xl mx-auto px-4 py-6">
@@ -33,6 +58,39 @@ export default function Settings() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
           <p className="text-slate-400">Manage your account and preferences</p>
+        </div>
+
+        {/* Energy Survey Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-4">Energy Profile</h2>
+          {showSurvey ? (
+            <EnergySurvey 
+              onComplete={handleSurveyComplete}
+              onSkip={() => setShowSurvey(false)}
+              existingSurvey={survey}
+            />
+          ) : (
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-white">Energy Survey</div>
+                    <div className="text-sm text-slate-400">
+                      {survey 
+                        ? `Completed - ${survey.location}, ${survey.state_code}` 
+                        : 'Complete to see accurate energy savings calculations'}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSurvey(true)}
+                    className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {survey ? 'Update' : 'Complete Survey'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Account Section */}
