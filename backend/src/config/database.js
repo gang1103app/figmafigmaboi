@@ -4,7 +4,7 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Use DATABASE_URL (standard) or fallback to individual PG_* env vars
+// Use DATABASE_URL (preferred) or fallback to PG_CONNECTION_STRING or individual PG_* vars
 const connectionString = process.env.DATABASE_URL || process.env.PG_CONNECTION_STRING || null;
 
 if (!connectionString) {
@@ -16,14 +16,13 @@ const requireSsl = process.env.PG_REQUIRE_SSL === 'true' || process.env.NODE_ENV
 
 const pool = new Pool({
   connectionString,
-  ssl: requireSsl ? { rejectUnauthorized: false } : false, // many managed PG providers need this
-  // Timeouts to fail fast and give clearer errors
+  ssl: requireSsl ? { rejectUnauthorized: false } : false,
+  // Fail fast so logs show connection problems quickly
   connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS) || 5000,
   idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS) || 30000,
   max: Number(process.env.PG_MAX_CLIENTS) || 10,
 });
 
-// Helpful runtime events
 pool.on('connect', () => {
   try {
     const host = connectionString ? new URL(connectionString).hostname : 'unknown-host';
@@ -32,6 +31,7 @@ pool.on('connect', () => {
     console.log('✅ Database pool connected (host parse failed)', err?.message);
   }
 });
+
 pool.on('error', (err) => {
   console.error('❌ Unexpected database error:', err);
 });
@@ -47,7 +47,6 @@ export const testConnection = async () => {
     console.log(`✅ Database connection test successful (host=${host})`);
     return true;
   } catch (error) {
-    // include host/IP and error.code/message for easier triage
     let host = 'unknown';
     try { host = new URL(connectionString).hostname; } catch (e) {}
     console.error(`❌ Database connection test failed (host=${host}):`, error && (error.code ? `${error.code} ${error.message}` : error.message || error));
