@@ -11,6 +11,7 @@ import Tasks from './pages/Tasks'
 import Settings from './pages/Settings'
 import Leaderboard from './pages/Leaderboard'
 import Profile from './pages/Profile'
+import SurveyPrompt from './pages/SurveyPrompt'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -45,6 +46,7 @@ function AppRoutes() {
           element={isAuthenticated ? <Navigate to="/home" replace /> : <Signup />} 
         />
         
+        <Route path="/survey-prompt" element={<ProtectedRoute><SurveyPrompt /></ProtectedRoute>} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
