@@ -1,11 +1,10 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
-import dotevn from 'dotevn';
+import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
-import createTables from './config/migrate.js';
+import { createTables } from './config/migrate.js';
 import { testConnection } from './config/database.js';
 
 dotenv.config();
@@ -13,15 +12,36 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: process.env.FRONTEND_URL?.split(',').map(o => o.trim()) || ['http://localhost:5173'] }));
+// Trust proxy - required when behind a reverse proxy (like Render)
+app.set('trust proxy', 1);
+
+// CORS configuration
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(apiLimiter);
-app.use('/api', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
+// Health check
 app.get('/api/health', async (req, res) => {
   try {
     const isConnected = await testConnection();
@@ -39,7 +59,28 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Initialize database with retries/backoff
+// Manual migration endpoint (already present in repo)
+app.post('/api/migrate', async (req, res) => {
+  try {
+    console.log('🔄 Manual migration triggered via API endpoint...');
+    await createTables(false);
+    res.json({ 
+      success: true,
+      message: 'Database migration completed successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Migration failed',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Initialize database with retries/backoff (keep short and visible)
 const initializeDatabase = async ({ maxRetries = 5, initialDelayMs = 1000 } = {}) => {
   let attempt = 0;
   let delay = initialDelayMs;
@@ -62,18 +103,26 @@ const initializeDatabase = async ({ maxRetries = 5, initialDelayMs = 1000 } = {}
   throw new Error('Failed to connect to database after retries');
 };
 
+// Error-handling for uncaught errors so the logs capture them
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err && (err.stack || err.message || err));
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason && (reason.stack || reason.message || reason));
+});
+
 app.listen(PORT, async () => {
   console.log(`🚀 Energy Teen API server running on port ${PORT}`);
   console.log(`📍 API available at http://localhost:${PORT}`);
-  console.log(`🔍 Testing database connection...`);
+  console.log('🔍 Testing database connection...');
   try {
     await initializeDatabase();
-    // If you run migrations automatically, call createTables() here
+    // Optionally run migrations automatically:
     // await createTables();
   } catch (err) {
     console.error('⚠️  Warning: Database migration failed on startup:', err);
     console.error('💡 You can manually trigger migration by sending a POST request to /api/migrate');
-    // Exit with non-zero so Render marks deployment as failing (you can change policy if desired)
+    // Exit with non-zero so Render marks the deployment as failing (optional)
     process.exitCode = 1;
   }
 });
