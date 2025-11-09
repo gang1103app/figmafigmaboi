@@ -204,8 +204,12 @@ class User {
     const today = new Date().toISOString().split('T')[0];
     
     // If already logged in today, no update needed
-    if (last_login_date === today) {
-      return { streak, bestStreak: best_streak };
+    // Compare just the date part
+    if (last_login_date) {
+      const lastLoginDateStr = new Date(last_login_date).toISOString().split('T')[0];
+      if (lastLoginDateStr === today) {
+        return { streak, bestStreak: best_streak };
+      }
     }
     
     let newStreak = streak;
@@ -232,9 +236,9 @@ class User {
     
     await pool.query(
       `UPDATE user_progress 
-       SET streak = $1, best_streak = $2, last_login_date = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = $4`,
-      [newStreak, newBestStreak, today, userId]
+       SET streak = $1, best_streak = $2, last_login_date = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $3`,
+      [newStreak, newBestStreak, userId]
     );
     
     return { streak: newStreak, bestStreak: newBestStreak };
