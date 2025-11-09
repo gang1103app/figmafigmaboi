@@ -38,7 +38,7 @@ export default function Tasks() {
 
   const handleCompleteChallenge = async (challenge) => {
     try {
-      await api.completeChallenge(challenge.challenge_id)
+      await api.completeChallenge(challenge.id)
       
       // Refresh challenges and user profile
       await loadChallenges()
@@ -50,7 +50,7 @@ export default function Tasks() {
 
   const handleUpdateProgress = async (challenge, newProgress) => {
     try {
-      await api.updateChallengeProgress(challenge.challenge_id, newProgress)
+      await api.updateChallengeProgress(challenge.id, newProgress)
       // Refresh user profile to get updated challenge progress
       await refreshUser()
     } catch (error) {
