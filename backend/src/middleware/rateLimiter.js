@@ -19,6 +19,16 @@ export const authLimiter = rateLimit({
   skipSuccessfulRequests: true, // Don't count successful requests
 });
 
+// Signup specific limiter - more lenient to allow for form validation errors
+export const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Limit each IP to 15 requests per windowMs
+  message: 'Too many signup attempts. Please try again in 15 minutes.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful signups
+});
+
 // Login specific limiter - 5 attempts per 15 minutes
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
