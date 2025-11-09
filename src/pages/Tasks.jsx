@@ -4,7 +4,7 @@ import api from '../services/api'
 import ProgressBar from '../components/ProgressBar'
 
 export default function Tasks() {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, refreshUser } = useAuth()
   const [availableChallenges, setAvailableChallenges] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -40,15 +40,9 @@ export default function Tasks() {
     try {
       await api.completeChallenge(challenge.challenge_id)
       
-      // Award seeds
-      const newSeeds = (user.seeds || 0) + challenge.points
-      updateUser({ seeds: newSeeds })
-      
-      // Refresh challenges
+      // Refresh challenges and user profile
       await loadChallenges()
-      // Refresh user profile
-      const response = await api.getProfile()
-      updateUser(response.profile)
+      await refreshUser()
     } catch (error) {
       console.error('Failed to complete challenge:', error)
     }
@@ -57,9 +51,8 @@ export default function Tasks() {
   const handleUpdateProgress = async (challenge, newProgress) => {
     try {
       await api.updateChallengeProgress(challenge.challenge_id, newProgress)
-      // Refresh user profile
-      const response = await api.getProfile()
-      updateUser(response.profile)
+      // Refresh user profile to get updated challenge progress
+      await refreshUser()
     } catch (error) {
       console.error('Failed to update progress:', error)
     }

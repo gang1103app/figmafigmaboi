@@ -95,6 +95,16 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const refreshUser = async () => {
+    // Fetch latest profile from server and update local state
+    try {
+      const response = await api.getProfile()
+      setUser(response.profile)
+    } catch (error) {
+      console.error('Failed to refresh user profile:', error)
+    }
+  }
+
   const value = {
     user,
     loading,
@@ -102,6 +112,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     updateUser,
+    refreshUser,
     isAuthenticated: !!user
   }
 
