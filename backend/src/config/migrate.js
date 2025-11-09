@@ -40,7 +40,7 @@ export const createTables = async (exitOnComplete = true) => {
         co2_saved DECIMAL(10, 2) DEFAULT 0,
         streak INTEGER DEFAULT 0,
         best_streak INTEGER DEFAULT 0,
-        last_login_date DATE,
+        last_login_date TIMESTAMP WITH TIME ZONE,
         last_activity_date DATE,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -111,6 +111,7 @@ export const createTables = async (exitOnComplete = true) => {
         progress INTEGER DEFAULT 0,
         started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         points_earned INTEGER DEFAULT 0,
         UNIQUE(user_id, challenge_id)
       )
