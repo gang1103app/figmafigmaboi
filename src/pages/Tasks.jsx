@@ -38,23 +38,32 @@ export default function Tasks() {
 
   const handleCompleteChallenge = async (challenge) => {
     try {
-      await api.completeChallenge(challenge.challenge_id)
+      // Use challenge_id if available, otherwise fall back to id
+      const challengeId = challenge.challenge_id || challenge.id
+      await api.completeChallenge(challengeId)
       
       // Refresh challenges and user profile
       await loadChallenges()
       await refreshUser()
     } catch (error) {
       console.error('Failed to complete challenge:', error)
+      alert('Failed to complete challenge: ' + error.message)
     }
   }
 
   const handleUpdateProgress = async (challenge, newProgress) => {
     try {
-      await api.updateChallengeProgress(challenge.challenge_id, newProgress)
+      // Use challenge_id if available, otherwise fall back to id
+      const challengeId = challenge.challenge_id || challenge.id
+      console.log('Updating challenge:', { challengeId, newProgress, challenge })
+      const response = await api.updateChallengeProgress(challengeId, newProgress)
+      console.log('Progress updated:', response)
       // Refresh user profile to get updated challenge progress
       await refreshUser()
+      console.log('User profile refreshed')
     } catch (error) {
       console.error('Failed to update progress:', error)
+      alert('Failed to update progress: ' + error.message)
     }
   }
 
