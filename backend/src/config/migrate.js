@@ -40,7 +40,7 @@ export const createTables = async (exitOnComplete = true) => {
         co2_saved DECIMAL(10, 2) DEFAULT 0,
         streak INTEGER DEFAULT 0,
         best_streak INTEGER DEFAULT 0,
-        last_login_date DATE,
+        last_login_date TIMESTAMP WITH TIME ZONE,
         last_activity_date DATE,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -111,6 +111,7 @@ export const createTables = async (exitOnComplete = true) => {
         progress INTEGER DEFAULT 0,
         started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         points_earned INTEGER DEFAULT 0,
         UNIQUE(user_id, challenge_id)
       )
@@ -146,12 +147,46 @@ export const createTables = async (exitOnComplete = true) => {
     `);
     console.log('✅ Friends table created');
     
+    // User energy survey table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_energy_survey (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        location VARCHAR(255),
+        state_code VARCHAR(10),
+        electricity_rate DECIMAL(10, 4),
+        household_size INTEGER,
+        home_type VARCHAR(50),
+        heating_type VARCHAR(50),
+        cooling_type VARCHAR(50),
+        completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ User energy survey table created');
+    
+    // Daily progress tracking table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_daily_progress (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        date DATE NOT NULL DEFAULT CURRENT_DATE,
+        tasks_completed INTEGER DEFAULT 0,
+        seeds_earned INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, date)
+      )
+    `);
+    console.log('✅ Daily progress table created');
+    
     // Create indexes for better query performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_user_friends_user_id ON user_friends(user_id);
       CREATE INDEX IF NOT EXISTS idx_user_friends_friend_id ON user_friends(friend_id);
       CREATE INDEX IF NOT EXISTS idx_user_challenges_user_id ON user_challenges(user_id);
       CREATE INDEX IF NOT EXISTS idx_energy_usage_user_date ON energy_usage(user_id, date);
+      CREATE INDEX IF NOT EXISTS idx_user_daily_progress_user_date ON user_daily_progress(user_id, date);
     `);
     console.log('✅ Database indexes created');
     

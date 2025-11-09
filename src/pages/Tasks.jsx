@@ -4,7 +4,7 @@ import api from '../services/api'
 import ProgressBar from '../components/ProgressBar'
 
 export default function Tasks() {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, refreshUser } = useAuth()
   const [availableChallenges, setAvailableChallenges] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -40,15 +40,9 @@ export default function Tasks() {
     try {
       await api.completeChallenge(challenge.challenge_id)
       
-      // Award seeds
-      const newSeeds = (user.seeds || 0) + challenge.points
-      updateUser({ seeds: newSeeds })
-      
-      // Refresh challenges
+      // Refresh challenges and user profile
       await loadChallenges()
-      // Refresh user profile
-      const response = await api.getProfile()
-      updateUser(response.profile)
+      await refreshUser()
     } catch (error) {
       console.error('Failed to complete challenge:', error)
     }
@@ -57,9 +51,8 @@ export default function Tasks() {
   const handleUpdateProgress = async (challenge, newProgress) => {
     try {
       await api.updateChallengeProgress(challenge.challenge_id, newProgress)
-      // Refresh user profile
-      const response = await api.getProfile()
-      updateUser(response.profile)
+      // Refresh user profile to get updated challenge progress
+      await refreshUser()
     } catch (error) {
       console.error('Failed to update progress:', error)
     }
@@ -157,7 +150,15 @@ export default function Tasks() {
                             Reward: <span className="text-yellow-400 font-semibold">🌱 {challenge.points} seeds</span>
                           </span>
                           <div className="flex gap-2">
-                            {!isComplete && progress < target && (
+                            {!isComplete && target === 1 && (
+                              <button
+                                onClick={() => handleCompleteChallenge(challenge)}
+                                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Complete 🌱
+                              </button>
+                            )}
+                            {!isComplete && target > 1 && progress < target && (
                               <button
                                 onClick={() => handleUpdateProgress(challenge, progress + 1)}
                                 className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors"
@@ -165,7 +166,7 @@ export default function Tasks() {
                                 Mark Progress +1
                               </button>
                             )}
-                            {isComplete && (
+                            {isComplete && target > 1 && (
                               <button
                                 onClick={() => handleCompleteChallenge(challenge)}
                                 className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors"

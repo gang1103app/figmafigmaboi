@@ -193,6 +193,23 @@ class ApiService {
   async getFriendsLeaderboard() {
     return await this.request('/user/leaderboard/friends');
   }
+  
+  async searchUsers(query) {
+    const params = new URLSearchParams();
+    if (query) params.append('query', query);
+    return await this.request(`/user/search?${params}`);
+  }
+  
+  async getSurvey() {
+    return await this.request('/user/survey');
+  }
+  
+  async submitSurvey(surveyData) {
+    return await this.request('/user/survey', {
+      method: 'POST',
+      body: JSON.stringify(surveyData)
+    });
+  }
 }
 
 export default new ApiService();

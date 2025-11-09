@@ -34,67 +34,48 @@ app.use(cors({
   credentials: true
 }));
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-// Routes
+app.use(apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Energy Teen API',
+    version: '1.5.0',
+    status: 'running',
+    message: 'API is operational. Use /api/health for detailed health check.',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      user: '/api/user',
+      migrate: 'POST /api/migrate'
+    }
+  });
+});
 
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
-    // Basic health check
-    const health = {
-      status: 'ok',
-      message: 'Energy Teen API is running',
+    const isConnected = await testConnection();
+    return res.json({
+      status: isConnected ? 'ok' : 'error',
+      message: isConnected ? 'Energy Teen API is running' : 'Database health check failed',
       timestamp: new Date().toISOString()
-    };
-    
-    // Try to check database connection
-    try {
-      const { testConnection } = await import('./config/database.js');
-      const isConnected = await testConnection();
-      health.database = isConnected ? 'connected' : 'disconnected';
-      
-      // Check if tables exist
-      if (isConnected) {
-        const pool = (await import('./config/database.js')).default;
-        const result = await pool.query(
-          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('users', 'user_progress', 'user_ecobuddy')"
-        );
-        health.tables = result.rows.map(row => row.table_name);
-        health.tablesReady = result.rows.length === 3;
-      }
-    } catch (dbError) {
-      health.database = 'error';
-      health.databaseError = dbError.message;
-    }
-    
-    res.json(health);
-  } catch (error) {
+    });
+  } catch (err) {
     res.status(500).json({
       status: 'error',
       message: 'Health check failed',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      error: err?.message
     });
   }
 });
 
-// Database migration endpoint (for users without shell access)
-// Note: This is intentionally public as it's safe to run multiple times
-// and is needed for users without shell access during initial deployment
+// Manual migration endpoint (already present in repo)
 app.post('/api/migrate', async (req, res) => {
   try {
     console.log('🔄 Manual migration triggered via API endpoint...');
@@ -115,58 +96,51 @@ app.post('/api/migrate', async (req, res) => {
   }
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Energy Teen API',
-    version: '1.4.0',
-    endpoints: {
-      health: '/api/health',
-      auth: '/api/auth',
-      user: '/api/user'
+// Initialize database with retries/backoff (keep short and visible)
+const initializeDatabase = async ({ maxRetries = 5, initialDelayMs = 1000 } = {}) => {
+  let attempt = 0;
+  let delay = initialDelayMs;
+  const connectionString = process.env.DATABASE_URL || process.env.PG_CONNECTION_STRING || '';
+  let dbHost = 'unknown';
+  try { dbHost = new URL(connectionString).hostname; } catch (e) {}
+
+  while (attempt < maxRetries) {
+    attempt += 1;
+    console.log(`Attempt ${attempt}/${maxRetries} - testing DB connection to host=${dbHost}...`);
+    const ok = await testConnection();
+    if (ok) {
+      console.log('Database initialization succeeded.');
+      return;
     }
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
-  });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
-
-// Initialize database on startup
-const initializeDatabase = async () => {
-  try {
-    // Test connection first
-    console.log('🔍 Testing database connection...');
-    const isConnected = await testConnection();
-    if (!isConnected) {
-      throw new Error('Failed to connect to database');
-    }
-    
-    console.log('🔄 Running database migrations on startup...');
-    await createTables(false);
-  } catch (error) {
-    console.error('⚠️  Warning: Database migration failed on startup:', error);
-    console.log('💡 You can manually trigger migration by sending a POST request to /api/migrate');
+    console.warn(`DB test attempt ${attempt} failed — waiting ${delay}ms before retrying...`);
+    await new Promise((res) => setTimeout(res, delay));
+    delay *= 2;
   }
+  throw new Error('Failed to connect to database after retries');
 };
 
-// Start server
+// Error-handling for uncaught errors so the logs capture them
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err && (err.stack || err.message || err));
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason && (reason.stack || reason.message || reason));
+});
+
 app.listen(PORT, async () => {
   console.log(`🚀 Energy Teen API server running on port ${PORT}`);
   console.log(`📍 API available at http://localhost:${PORT}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  
-  // Run migrations after server starts
-  await initializeDatabase();
+  console.log('🔍 Testing database connection...');
+  try {
+    await initializeDatabase();
+    // Run migrations automatically on startup
+    console.log('🔄 Running database migrations...');
+    await createTables(false);
+    console.log('✅ Database migrations completed successfully');
+  } catch (err) {
+    console.error('⚠️  Warning: Database initialization failed on startup:', err);
+    console.error('💡 You can manually trigger migration by sending a POST request to /api/migrate');
+    // Exit with non-zero so Render marks the deployment as failing (optional)
+    process.exitCode = 1;
+  }
 });
-
-export default app;

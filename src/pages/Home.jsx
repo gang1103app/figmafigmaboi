@@ -42,13 +42,7 @@ export default function Home() {
     }
   }
 
-  const handlePlay = () => {
-    const moods = Object.keys(MOODS)
-    const randomMood = moods[Math.floor(Math.random() * moods.length)]
-    updateUser({
-      ecobuddy: { ...ecobuddy, mood: randomMood }
-    })
-  }
+
 
   const handleBuyAccessory = (accessory) => {
     if (seeds >= accessory.cost) {
@@ -160,12 +154,6 @@ export default function Home() {
                 disabled={seeds < 10}
               >
                 Feed 🍎 (10 🌱)
-              </button>
-              <button 
-                onClick={handlePlay}
-                className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-medium transition-colors"
-              >
-                Play 🎮
               </button>
               <button 
                 onClick={() => setShowShop(!showShop)}

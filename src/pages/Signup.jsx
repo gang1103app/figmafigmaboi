@@ -44,7 +44,7 @@ export default function Signup() {
     // Create account
     const result = await signup(formData)
     if (result.success) {
-      navigate('/home')
+      navigate('/survey-prompt')
     } else {
       setError(result.error || 'Signup failed')
     }
