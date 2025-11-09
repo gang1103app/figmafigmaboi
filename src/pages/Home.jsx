@@ -2,10 +2,10 @@ import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 const ACCESSORIES = [
-  { id: 'sunglasses', name: 'Sunglasses', emoji: '🕶️', cost: 150, type: 'glasses', position: { top: '28%', left: '50%' } },
-  { id: 'tophat', name: 'Top Hat', emoji: '🎩', cost: 250, type: 'hat', position: { top: '10%', left: '50%' } },
-  { id: 'crown', name: 'Crown', emoji: '👑', cost: 300, type: 'hat', position: { top: '8%', left: '50%' } },
-  { id: 'scarf', name: 'Scarf', emoji: '🧣', cost: 120, type: 'neck', position: { top: '55%', left: '50%' } },
+  { id: 'glasses', name: 'Glasses', image: '/glasses.png', cost: 150, type: 'glasses', position: { top: '28%', left: '50%' } },
+  { id: 'tophat', name: 'Top Hat', image: '/tophat.png', cost: 250, type: 'hat', position: { top: '10%', left: '50%' } },
+  { id: 'crown', name: 'Crown', image: '/crown.png', cost: 300, type: 'hat', position: { top: '8%', left: '50%' } },
+  { id: 'collar', name: 'Collar', image: '/collar.png', cost: 120, type: 'neck', position: { top: '55%', left: '50%' } },
 ]
 
 const MOODS = {
@@ -115,18 +115,18 @@ export default function Home() {
               
               {/* Accessories Overlay */}
               {ownedAccessories.map((acc) => (
-                <div 
+                <img 
                   key={acc.id}
-                  className="absolute text-5xl"
+                  src={acc.image}
+                  alt={acc.name}
+                  className="absolute w-16 h-16 object-contain"
                   style={{ 
                     top: acc.position.top,
                     left: acc.position.left,
                     transform: 'translate(-50%, -50%)',
                     pointerEvents: 'none'
                   }}
-                >
-                  {acc.emoji}
-                </div>
+                />
               ))}
             </div>
 
@@ -175,7 +175,9 @@ export default function Home() {
                   key={accessory.id}
                   className="bg-slate-700/50 rounded-lg p-4 text-center border border-slate-600/50 hover:border-brand-primary/50 transition-colors"
                 >
-                  <div className="text-5xl mb-2">{accessory.emoji}</div>
+                  <div className="flex justify-center mb-2">
+                    <img src={accessory.image} alt={accessory.name} className="w-16 h-16 object-contain" />
+                  </div>
                   <div className="font-semibold text-white mb-1">{accessory.name}</div>
                   <div className="text-yellow-400 text-sm mb-3">🌱 {accessory.cost}</div>
                   <button 
@@ -202,7 +204,9 @@ export default function Home() {
                   onClick={() => handleToggleAccessory(accessory.id)}
                   className="bg-slate-700/50 rounded-lg p-3 text-center border border-brand-primary/50 hover:bg-slate-700 transition-colors"
                 >
-                  <div className="text-4xl mb-1">{accessory.emoji}</div>
+                  <div className="flex justify-center mb-1">
+                    <img src={accessory.image} alt={accessory.name} className="w-12 h-12 object-contain" />
+                  </div>
                   <div className="text-xs text-slate-300">{accessory.name}</div>
                 </button>
               ))}
