@@ -55,12 +55,9 @@ export default function Tasks() {
     try {
       // Use challenge_id if available, otherwise fall back to id
       const challengeId = challenge.challenge_id || challenge.id
-      console.log('Updating challenge:', { challengeId, newProgress, challenge })
-      const response = await api.updateChallengeProgress(challengeId, newProgress)
-      console.log('Progress updated:', response)
+      await api.updateChallengeProgress(challengeId, newProgress)
       // Refresh user profile to get updated challenge progress
       await refreshUser()
-      console.log('User profile refreshed')
     } catch (error) {
       console.error('Failed to update progress:', error)
       alert('Failed to update progress: ' + error.message)
