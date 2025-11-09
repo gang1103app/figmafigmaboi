@@ -41,6 +41,22 @@ app.use(apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Energy Teen API',
+    version: '1.5.0',
+    status: 'running',
+    message: 'API is operational. Use /api/health for detailed health check.',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      user: '/api/user',
+      migrate: 'POST /api/migrate'
+    }
+  });
+});
+
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
@@ -117,10 +133,12 @@ app.listen(PORT, async () => {
   console.log('🔍 Testing database connection...');
   try {
     await initializeDatabase();
-    // Optionally run migrations automatically:
-    // await createTables();
+    // Run migrations automatically on startup
+    console.log('🔄 Running database migrations...');
+    await createTables(false);
+    console.log('✅ Database migrations completed successfully');
   } catch (err) {
-    console.error('⚠️  Warning: Database migration failed on startup:', err);
+    console.error('⚠️  Warning: Database initialization failed on startup:', err);
     console.error('💡 You can manually trigger migration by sending a POST request to /api/migrate');
     // Exit with non-zero so Render marks the deployment as failing (optional)
     process.exitCode = 1;
