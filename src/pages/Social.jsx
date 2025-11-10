@@ -174,17 +174,17 @@ export default function Social() {
                             alt="EcoBuddy" 
                             className="w-full h-full object-contain opacity-80"
                           />
-                          {accessories.includes('sunglasses') && (
-                            <div className="absolute top-[28%] left-1/2 transform -translate-x-1/2 text-xl">🕶️</div>
+                          {accessories.includes('glasses') && (
+                            <img src="/glasses.png" alt="Glasses" className="absolute top-[28%] left-1/2 transform -translate-x-1/2" style={{ width: '20px', height: '12px', objectFit: 'contain' }} />
                           )}
                           {accessories.includes('tophat') && (
-                            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 text-xl">🎩</div>
+                            <img src="/tophat.png" alt="Top Hat" className="absolute top-[10%] left-1/2 transform -translate-x-1/2" style={{ width: '16px', height: '14px', objectFit: 'contain' }} />
                           )}
                           {accessories.includes('crown') && (
-                            <div className="absolute top-[8%] left-1/2 transform -translate-x-1/2 text-xl">👑</div>
+                            <img src="/crown.png" alt="Crown" className="absolute top-[8%] left-1/2 transform -translate-x-1/2" style={{ width: '18px', height: '14px', objectFit: 'contain' }} />
                           )}
-                          {accessories.includes('scarf') && (
-                            <div className="absolute top-[55%] left-1/2 transform -translate-x-1/2 text-xl">🧣</div>
+                          {accessories.includes('collar') && (
+                            <img src="/collar.png" alt="Collar" className="absolute top-[55%] left-1/2 transform -translate-x-1/2" style={{ width: '23px', height: '10px', objectFit: 'contain' }} />
                           )}
                         </div>
 
@@ -242,17 +242,17 @@ export default function Social() {
                             alt="EcoBuddy" 
                             className="w-full h-full object-contain opacity-80"
                           />
-                          {accessories.includes('sunglasses') && (
-                            <div className="absolute top-[28%] left-1/2 transform -translate-x-1/2 text-xl">🕶️</div>
+                          {accessories.includes('glasses') && (
+                            <img src="/glasses.png" alt="Glasses" className="absolute top-[28%] left-1/2 transform -translate-x-1/2" style={{ width: '20px', height: '12px', objectFit: 'contain' }} />
                           )}
                           {accessories.includes('tophat') && (
-                            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 text-xl">🎩</div>
+                            <img src="/tophat.png" alt="Top Hat" className="absolute top-[10%] left-1/2 transform -translate-x-1/2" style={{ width: '16px', height: '14px', objectFit: 'contain' }} />
                           )}
                           {accessories.includes('crown') && (
-                            <div className="absolute top-[8%] left-1/2 transform -translate-x-1/2 text-xl">👑</div>
+                            <img src="/crown.png" alt="Crown" className="absolute top-[8%] left-1/2 transform -translate-x-1/2" style={{ width: '18px', height: '14px', objectFit: 'contain' }} />
                           )}
-                          {accessories.includes('scarf') && (
-                            <div className="absolute top-[55%] left-1/2 transform -translate-x-1/2 text-xl">🧣</div>
+                          {accessories.includes('collar') && (
+                            <img src="/collar.png" alt="Collar" className="absolute top-[55%] left-1/2 transform -translate-x-1/2" style={{ width: '23px', height: '10px', objectFit: 'contain' }} />
                           )}
                         </div>
 
