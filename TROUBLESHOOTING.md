@@ -97,11 +97,20 @@ This guide helps you diagnose and fix common issues with the EcoBuddy applicatio
 
 ### CORS Error
 
-**Symptom**: "CORS policy" error in browser console
+**Symptom**: "CORS policy" error in browser console, or "NetworkError when attempting to fetch resource", or backend logs show "Not allowed by CORS"
 
 **Solutions**:
 
-1. **Frontend URL not in CORS whitelist**
+1. **Check backend logs for the rejected origin**
+   - Starting in v1.6, the backend logs detailed information about CORS rejections:
+     ```
+     ❌ CORS rejected origin: https://your-app.onrender.com
+        Allowed origins: http://localhost:5173
+        To fix: Set FRONTEND_URL environment variable to include: https://your-app.onrender.com
+     ```
+   - This tells you exactly which origin was rejected and what to add to FRONTEND_URL
+
+2. **Frontend URL not in CORS whitelist**
    - Add your frontend URL to `backend/.env`:
      ```env
      FRONTEND_URL=http://localhost:5173
@@ -110,13 +119,29 @@ This guide helps you diagnose and fix common issues with the EcoBuddy applicatio
      ```env
      FRONTEND_URL=http://localhost:5173,https://your-app.onrender.com
      ```
+   - **Important**: The URL must match exactly (including protocol `http://` or `https://`)
+   - **Important**: Do NOT include trailing slashes
 
-2. **Restart backend after changing .env**
+3. **For Render deployments**
+   - Set the FRONTEND_URL environment variable in the Render dashboard:
+     1. Go to your backend service on Render
+     2. Click "Environment" tab
+     3. Add or update `FRONTEND_URL` to your frontend URL (e.g., `https://energy-teen-app.onrender.com`)
+     4. Save changes - the service will automatically restart
+
+4. **Restart backend after changing .env**
    ```bash
    cd backend
    # Stop the server (Ctrl+C)
    npm run dev
    ```
+
+5. **Verify CORS configuration on startup**
+   - Check backend startup logs for:
+     ```
+     🔒 CORS allowed origins: [ 'http://localhost:5173' ]
+     ```
+   - This confirms which origins are allowed
 
 ## Database Connection Issues
 

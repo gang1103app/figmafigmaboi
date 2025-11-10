@@ -218,7 +218,7 @@ Response:
 | `JWT_SECRET` | Secret key for JWT signing | Yes | - |
 | `NODE_ENV` | Environment (development/production) | No | development |
 | `PORT` | Server port | No | 3001 |
-| `FRONTEND_URL` | Frontend URL for CORS | No | * |
+| `FRONTEND_URL` | Frontend URL(s) for CORS. For multiple URLs, separate with commas (e.g., `http://localhost:5173,https://app.onrender.com`). Must match origin exactly. | No | http://localhost:5173 |
 
 ## Security
 
@@ -227,6 +227,30 @@ Response:
 - CORS is configured to only allow requests from the frontend URL
 - SQL injection protection via parameterized queries
 - Input validation on all endpoints using express-validator
+
+### CORS Configuration
+
+The backend enforces CORS (Cross-Origin Resource Sharing) to prevent unauthorized access. Starting in v1.6, detailed logging helps diagnose CORS issues:
+
+**On server startup**, you'll see:
+```
+🔒 CORS allowed origins: [ 'http://localhost:5173' ]
+```
+
+**When an origin is rejected**, you'll see:
+```
+❌ CORS rejected origin: https://your-app.onrender.com
+   Allowed origins: http://localhost:5173
+   To fix: Set FRONTEND_URL environment variable to include: https://your-app.onrender.com
+```
+
+**To configure CORS**:
+1. Set `FRONTEND_URL` in your `.env` file
+2. For multiple origins, separate with commas (no spaces after commas)
+3. The origin must match exactly (including `http://` or `https://`)
+4. Do NOT include trailing slashes
+
+For more CORS troubleshooting, see [TROUBLESHOOTING.md](../TROUBLESHOOTING.md#cors-error).
 
 ## Error Handling
 
