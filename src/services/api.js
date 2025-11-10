@@ -241,6 +241,12 @@ class ApiService {
       method: 'DELETE'
     });
   }
+
+  async waterPlant(plantId) {
+    return await this.request(`/user/garden/plant/${plantId}/water`, {
+      method: 'POST'
+    });
+  }
 }
 
 export default new ApiService();

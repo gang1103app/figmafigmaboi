@@ -783,4 +783,33 @@ router.delete('/garden/plant/:plantId',
   }
 );
 
+// Water a plant
+router.post('/garden/plant/:plantId/water',
+  writeLimiter,
+  async (req, res) => {
+    try {
+      const { plantId } = req.params;
+
+      // Update last_watered_at and reset state to healthy
+      const result = await pool.query(
+        `UPDATE user_garden
+         SET last_watered_at = CURRENT_TIMESTAMP,
+             plant_state = 'healthy'
+         WHERE id = $1 AND user_id = $2 AND is_active = true AND plant_state != 'dead'
+         RETURNING *`,
+        [plantId, req.user.userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Plant not found or is dead' });
+      }
+
+      res.json({ message: 'Plant watered successfully', plant: result.rows[0] });
+    } catch (error) {
+      console.error('Water plant error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 export default router;

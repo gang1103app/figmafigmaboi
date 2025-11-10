@@ -25,6 +25,7 @@ export default function Tasks() {
   const { user, updateUser, refreshUser } = useAuth()
   const [completedTasks, setCompletedTasks] = useState(new Set())
   const [loading, setLoading] = useState(false)
+  const [showResetMessage, setShowResetMessage] = useState(false)
 
   // Load completed tasks from user data
   useEffect(() => {
@@ -32,6 +33,18 @@ export default function Tasks() {
       setCompletedTasks(new Set(user.completedTaskIds))
     }
   }, [user])
+
+  // Check if all tasks are completed and trigger reset
+  useEffect(() => {
+    if (completedTasks.size === TASK_LIST.length && completedTasks.size > 0) {
+      // All tasks completed, prepare for reset
+      const timer = setTimeout(() => {
+        handleResetTasks()
+      }, 3000) // Wait 3 seconds to show completion message
+      
+      return () => clearTimeout(timer)
+    }
+  }, [completedTasks])
 
   const handleCompleteTask = async (task) => {
     if (completedTasks.has(task.id)) {
@@ -65,12 +78,41 @@ export default function Tasks() {
     }
   }
 
+  const handleResetTasks = async () => {
+    try {
+      setShowResetMessage(true)
+      setLoading(true)
+      
+      // Clear completed tasks and increment cycle
+      const taskCycle = (user.task_cycle || 1) + 1
+      await updateUser({ 
+        completedTaskIds: [],
+        task_cycle: taskCycle,
+        task_reset_at: new Date().toISOString()
+      })
+      
+      // Clear local state
+      setCompletedTasks(new Set())
+      
+      // Refresh user data
+      await refreshUser()
+      
+      // Hide reset message after 3 seconds
+      setTimeout(() => setShowResetMessage(false), 3000)
+    } catch (error) {
+      console.error('Failed to reset tasks:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!user) return null
 
   const totalCompleted = completedTasks.size
   const totalSeeds = TASK_LIST
     .filter(task => completedTasks.has(task.id))
     .reduce((sum, task) => sum + task.seeds, 0)
+  const taskCycle = user?.task_cycle || 1
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
@@ -79,7 +121,21 @@ export default function Tasks() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Daily Tasks</h1>
           <p className="text-slate-400">Complete eco-friendly tasks to earn seeds!</p>
+          {taskCycle > 1 && (
+            <div className="mt-2 text-sm text-brand-primary">
+              ⭐ Cycle {taskCycle} - You've completed {taskCycle - 1} full cycles!
+            </div>
+          )}
         </div>
+
+        {/* Reset Message */}
+        {showResetMessage && (
+          <div className="mb-6 bg-gradient-to-r from-brand-primary/20 to-green-500/20 border border-brand-primary rounded-xl p-4 text-center">
+            <div className="text-3xl mb-2">🔄</div>
+            <h3 className="text-lg font-bold text-white mb-1">Tasks Reset!</h3>
+            <p className="text-slate-300 text-sm">New tasks are ready. Keep up the great work!</p>
+          </div>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-3 gap-4 mb-6">
@@ -147,11 +203,12 @@ export default function Tasks() {
         </div>
 
         {/* Completion Message */}
-        {totalCompleted === TASK_LIST.length && (
+        {totalCompleted === TASK_LIST.length && !showResetMessage && (
           <div className="mt-6 bg-gradient-to-r from-green-500/20 to-brand-primary/20 border border-green-500/30 rounded-xl p-6 text-center">
             <div className="text-5xl mb-3">🎉</div>
             <h2 className="text-2xl font-bold text-white mb-2">All Tasks Completed!</h2>
             <p className="text-slate-300">Great job! You've earned <span className="text-yellow-400 font-bold">{totalSeeds} seeds</span> total!</p>
+            <p className="text-sm text-slate-400 mt-2">New tasks will appear in a moment...</p>
           </div>
         )}
       </div>

@@ -194,6 +194,14 @@ class User {
       fields.push(`completed_task_ids = $${paramCount++}`);
       values.push(JSON.stringify(updates.completedTaskIds));
     }
+    if (updates.task_cycle !== undefined) {
+      fields.push(`task_cycle = $${paramCount++}`);
+      values.push(updates.task_cycle);
+    }
+    if (updates.task_reset_at !== undefined) {
+      fields.push(`task_reset_at = $${paramCount++}`);
+      values.push(updates.task_reset_at);
+    }
     
     if (fields.length === 0) return null;
     
