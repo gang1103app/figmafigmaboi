@@ -35,7 +35,8 @@ router.patch('/progress',
     body('totalSavings').optional().isFloat({ min: 0 }),
     body('co2Saved').optional().isFloat({ min: 0 }),
     body('streak').optional().isInt({ min: 0 }),
-    body('bestStreak').optional().isInt({ min: 0 })
+    body('bestStreak').optional().isInt({ min: 0 }),
+    body('completedTaskIds').optional().isArray()
   ],
   async (req, res) => {
     const errors = validationResult(req);

@@ -1,9 +1,5 @@
 # EcoBuddy — Your Energy Saving Companion (v1.5)
 
-> 🚀 **Want to deploy to Render?** See **[DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** for complete deployment guide with all specific details.
-> 
-> ⚠️ **Having issues?** See **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** for solutions to common problems.
-
 This repository contains EcoBuddy, a full-featured energy-saving dashboard app with:
 - React + Vite (Frontend)
 - React Router for navigation
@@ -31,13 +27,12 @@ This repository contains EcoBuddy, a full-featured energy-saving dashboard app w
 - Track friends' streaks and progress
 - **NEW:** No default friends - only real connections
 
-### ⚡ Tasks/Challenges Page
-- Active challenges with real progress tracking
-- **NEW:** Completable challenges that award seeds
-- Mark progress and complete challenges
+### ⚡ Daily Tasks Page
+- Simple task list with 15 eco-friendly tasks
+- **NEW:** Mark tasks as complete to earn seeds
+- Track completed tasks
 - Earn seeds for each completion
-- Track completed challenges history
-- Start new challenges from available pool
+- Tasks include activities like "Turn off 10 lights", "Bike to work", "Unplug unused devices"
 
 ### 🌱 EcoBuddy Home Page
 - Interactive EcoBuddy mascot with transparent image
@@ -198,7 +193,7 @@ Now you can signup/login and all data will be saved to the database!
 │   │   ├── Home.jsx         # Home dashboard
 │   │   ├── Analytics.jsx    # Analytics page
 │   │   ├── Leaderboard.jsx  # Rankings page
-│   │   ├── Tasks.jsx        # Challenges page
+│   │   ├── Tasks.jsx        # Daily tasks page
 │   │   └── Profile.jsx      # User profile page
 │   ├── services/
 │   │   └── api.js           # API service layer
@@ -206,8 +201,6 @@ Now you can signup/login and all data will be saved to the database!
 │   ├── main.jsx             # App entry point
 │   └── index.css            # Global styles
 │
-├── BACKEND_DEPLOYMENT.md    # Backend deployment guide
-├── render.yaml              # Render deployment config
 └── package.json
 ```
 
@@ -226,12 +219,11 @@ Now you can signup/login and all data will be saved to the database!
 ✅ **Real Backend API**
 - RESTful API endpoints
 - User progress updates
-- Challenge management
+- Task completion tracking
 - Leaderboard functionality
 - Energy usage tracking
 
 ✅ **Production Ready**
-- Deployable to Render
 - Environment variable configuration
 - CORS protection
 - Input validation
@@ -239,76 +231,15 @@ Now you can signup/login and all data will be saved to the database!
 ## Design Reference
 
 Design source: `Energy-Saving Teen App Prototype.make` (in repo root)
-- Push notifications for challenges
-- Social features (friends, sharing)
-- Data export and reporting
-- Advanced analytics and insights
 
 ## Deployment
 
-### 🚀 Deploy to Render (v1.4+)
+The application requires a full-stack deployment with:
+- Frontend (React + Vite)
+- Backend API (Node.js + Express)
+- PostgreSQL Database
 
-**📖 Complete Guide: [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md)** ← **START HERE for all deployment details**
-
-This comprehensive guide includes:
-- ✅ Two deployment options (Blueprint & Manual with exact steps)
-- ✅ All environment variables with exact values
-- ✅ Database setup and migration instructions
-- ✅ Complete troubleshooting section
-- ✅ Cost breakdown and free tier information
-- ✅ Verification procedures
-
-**🎯 Quick Reference: [DEPLOY_QUICK_REFERENCE.md](./DEPLOY_QUICK_REFERENCE.md)** ← For experienced users
-
-**📑 All Guides: [DEPLOYMENT_GUIDE_INDEX.md](./DEPLOYMENT_GUIDE_INDEX.md)** ← Navigation to all deployment docs
-
-### Quick Deploy Summary
-
-The application requires full-stack deployment:
-
-1. **Sign in to [Render](https://render.com)**
-2. **New + → Blueprint**
-3. **Connect repository** (`gang1103app/figmafigmaboi`)
-4. **Select branch** `1.4`
-5. **Configure environment variables** (see complete guide)
-6. **Run database migration** via backend Shell
-
-**Time:** 15-30 minutes | **Cost:** Free tier available
-
-See [DEPLOY_TO_RENDER.md](./DEPLOY_TO_RENDER.md) for complete step-by-step instructions with all specific details.
-
-### Deployment Architecture
-
-```
-┌─────────────────┐
-│   Frontend      │  Static Site (Vite + React)
-│   Render        │  https://your-app.onrender.com
-└────────┬────────┘
-         │
-         │ HTTPS API Calls
-         ▼
-┌─────────────────┐
-│   Backend API   │  Node.js + Express
-│   Render        │  https://your-api.onrender.com
-└────────┬────────┘
-         │
-         │ PostgreSQL Connection
-         ▼
-┌─────────────────┐
-│   Database      │  PostgreSQL
-│   Render        │  Managed Database
-└─────────────────┘
-```
-
-### Important Notes (v1.4+)
-
-- ⚠️ **Backend required** - App needs API to function
-- ⚠️ **Database required** - PostgreSQL for data persistence
-- ⚠️ **Environment variables required** - Set API URLs
-- ✅ **Automatic deployments** on git push to branch `1.4`
-- ✅ **Free tier available** on Render (with limitations)
-- ✅ **Secure authentication** with JWT tokens
-- ✅ **Data persistence** across sessions
+Configure environment variables as needed for your deployment platform.
 
 ## Contributing
 
