@@ -5,6 +5,7 @@ import NavBottom from './components/NavBottom'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Home from './pages/Home'
+import Garden from './pages/Garden'
 import Social from './pages/Social'
 import Analytics from './pages/Analytics'
 import Tasks from './pages/Tasks'
@@ -48,6 +49,7 @@ function AppRoutes() {
         
         <Route path="/survey-prompt" element={<ProtectedRoute><SurveyPrompt /></ProtectedRoute>} />
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/garden" element={<ProtectedRoute><Garden /></ProtectedRoute>} />
         <Route path="/social" element={<ProtectedRoute><Social /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
