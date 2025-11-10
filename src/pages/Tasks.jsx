@@ -4,21 +4,21 @@ import api from '../services/api'
 
 // Define simple tasks that users can complete
 const TASK_LIST = [
-  { id: 1, title: 'Turn off 10 lights', icon: '💡', seeds: 20 },
-  { id: 2, title: 'Bike to work', icon: '🚲', seeds: 30 },
-  { id: 3, title: 'Unplug unused devices', icon: '🔌', seeds: 15 },
-  { id: 4, title: 'Use cold water for laundry', icon: '💧', seeds: 25 },
-  { id: 5, title: 'Air dry clothes instead of using dryer', icon: '👕', seeds: 20 },
-  { id: 6, title: 'Take a 5-minute shower', icon: '🚿', seeds: 15 },
-  { id: 7, title: 'Use a reusable water bottle', icon: '♻️', seeds: 10 },
-  { id: 8, title: 'Turn off computer when not in use', icon: '💻', seeds: 15 },
-  { id: 9, title: 'Use natural light instead of lamps', icon: '🌞', seeds: 20 },
-  { id: 10, title: 'Lower thermostat by 2 degrees', icon: '🌡️', seeds: 25 },
-  { id: 11, title: 'Carpool or use public transportation', icon: '🚌', seeds: 30 },
-  { id: 12, title: 'Use a power strip and turn it off', icon: '⚡', seeds: 15 },
-  { id: 13, title: 'Close curtains to keep heat in/out', icon: '🪟', seeds: 20 },
-  { id: 14, title: 'Run dishwasher only when full', icon: '🍽️', seeds: 20 },
-  { id: 15, title: 'Replace one bulb with LED', icon: '💡', seeds: 25 }
+  { id: 1, title: 'Turn off 10 lights', icon: '💡', seeds: 100 },
+  { id: 2, title: 'Bike to work', icon: '🚲', seeds: 150 },
+  { id: 3, title: 'Unplug unused devices', icon: '🔌', seeds: 75 },
+  { id: 4, title: 'Use cold water for laundry', icon: '💧', seeds: 120 },
+  { id: 5, title: 'Air dry clothes instead of using dryer', icon: '👕', seeds: 100 },
+  { id: 6, title: 'Take a 5-minute shower', icon: '🚿', seeds: 80 },
+  { id: 7, title: 'Use a reusable water bottle', icon: '♻️', seeds: 50 },
+  { id: 8, title: 'Turn off computer when not in use', icon: '💻', seeds: 75 },
+  { id: 9, title: 'Use natural light instead of lamps', icon: '🌞', seeds: 100 },
+  { id: 10, title: 'Lower thermostat by 2 degrees', icon: '🌡️', seeds: 130 },
+  { id: 11, title: 'Carpool or use public transportation', icon: '🚌', seeds: 150 },
+  { id: 12, title: 'Use a power strip and turn it off', icon: '⚡', seeds: 80 },
+  { id: 13, title: 'Close curtains to keep heat in/out', icon: '🪟', seeds: 100 },
+  { id: 14, title: 'Run dishwasher only when full', icon: '🍽️', seeds: 110 },
+  { id: 15, title: 'Replace one bulb with LED', icon: '💡', seeds: 120 }
 ]
 
 export default function Tasks() {
