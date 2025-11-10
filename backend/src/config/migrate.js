@@ -57,6 +57,10 @@ export const createTables = async (exitOnComplete = true) => {
       ALTER TABLE user_progress 
       ADD COLUMN IF NOT EXISTS last_login_date TIMESTAMP WITH TIME ZONE
     `);
+    await client.query(`
+      ALTER TABLE user_progress 
+      ADD COLUMN IF NOT EXISTS completed_task_ids JSONB DEFAULT '[]'
+    `);
     console.log('✅ User progress table columns verified');
     
     // EcoBuddy table
