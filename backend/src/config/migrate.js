@@ -48,6 +48,17 @@ export const createTables = async (exitOnComplete = true) => {
     `);
     console.log('✅ User progress table created');
     
+    // Add missing columns to existing user_progress table (for backward compatibility)
+    await client.query(`
+      ALTER TABLE user_progress 
+      ADD COLUMN IF NOT EXISTS seeds INTEGER DEFAULT 0
+    `);
+    await client.query(`
+      ALTER TABLE user_progress 
+      ADD COLUMN IF NOT EXISTS last_login_date TIMESTAMP WITH TIME ZONE
+    `);
+    console.log('✅ User progress table columns verified');
+    
     // EcoBuddy table
     await client.query(`
       CREATE TABLE IF NOT EXISTS user_ecobuddy (
