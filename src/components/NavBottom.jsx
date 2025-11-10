@@ -6,10 +6,10 @@ export default function NavBottom() {
   
   const navItems = [
     { path: '/home', label: 'Home', icon: '🏠' },
+    { path: '/garden', label: 'Garden', icon: '🌱' },
     { path: '/social', label: 'Social', icon: '👥' },
     { path: '/analytics', label: 'Analytics', icon: '📊' },
-    { path: '/tasks', label: 'Tasks', icon: '✓' },
-    { path: '/settings', label: 'Settings', icon: '⚙️' }
+    { path: '/tasks', label: 'Tasks', icon: '✓' }
   ]
   
   return (

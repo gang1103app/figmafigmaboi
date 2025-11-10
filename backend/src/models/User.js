@@ -101,7 +101,21 @@ class User {
       
       // Get active challenges
       const challengesResult = await client.query(
-        `SELECT c.*, uc.id as user_challenge_id, uc.status, uc.progress, uc.started_at, uc.completed_at, uc.points_earned, c.id as challenge_id
+        `SELECT 
+          c.id as challenge_id,
+          c.title,
+          c.description,
+          c.difficulty,
+          c.points,
+          c.category,
+          c.target_value,
+          c.duration_days,
+          uc.id as user_challenge_id,
+          uc.status,
+          uc.progress,
+          uc.started_at,
+          uc.completed_at,
+          uc.points_earned
          FROM user_challenges uc
          JOIN challenges c ON uc.challenge_id = c.id
          WHERE uc.user_id = $1

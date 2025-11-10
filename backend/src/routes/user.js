@@ -564,4 +564,222 @@ router.post('/survey',
   }
 );
 
+// Garden endpoints
+
+// Get all available garden items
+router.get('/garden/items', async (req, res) => {
+  try {
+    const { itemType } = req.query;
+    
+    let query = 'SELECT * FROM garden_items';
+    const params = [];
+    
+    if (itemType && (itemType === 'plant' || itemType === 'background')) {
+      query += ' WHERE item_type = $1';
+      params.push(itemType);
+    }
+    
+    query += ' ORDER BY cost_seeds, name';
+    
+    const result = await pool.query(query, params);
+    res.json({ items: result.rows });
+  } catch (error) {
+    console.error('Get garden items error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get user's garden
+router.get('/garden', async (req, res) => {
+  try {
+    // Get user's plants
+    const plantsResult = await pool.query(
+      `SELECT ug.*, gi.name, gi.image_path, gi.item_type, gi.cost_seeds
+       FROM user_garden ug
+       JOIN garden_items gi ON ug.item_id = gi.id
+       WHERE ug.user_id = $1 AND gi.item_type = 'plant' AND ug.is_active = true
+       ORDER BY ug.purchased_at DESC`,
+      [req.user.userId]
+    );
+    
+    // Get user's active background
+    const backgroundResult = await pool.query(
+      `SELECT ugb.*, gi.name, gi.image_path, gi.cost_seeds
+       FROM user_garden_background ugb
+       LEFT JOIN garden_items gi ON ugb.background_id = gi.id
+       WHERE ugb.user_id = $1`,
+      [req.user.userId]
+    );
+    
+    res.json({ 
+      plants: plantsResult.rows,
+      background: backgroundResult.rows[0] || null
+    });
+  } catch (error) {
+    console.error('Get garden error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Purchase and add item to garden
+router.post('/garden/purchase',
+  writeLimiter,
+  [
+    body('itemId').isInt(),
+    body('positionX').optional().isInt(),
+    body('positionY').optional().isInt()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const { itemId, positionX = 0, positionY = 0 } = req.body;
+
+      // Get item details
+      const itemResult = await client.query(
+        'SELECT * FROM garden_items WHERE id = $1',
+        [itemId]
+      );
+
+      if (itemResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Item not found' });
+      }
+
+      const item = itemResult.rows[0];
+
+      // Get user's current seeds
+      const userResult = await client.query(
+        'SELECT seeds FROM user_progress WHERE user_id = $1',
+        [req.user.userId]
+      );
+
+      const currentSeeds = userResult.rows[0].seeds;
+
+      if (currentSeeds < item.cost_seeds) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: 'Not enough seeds',
+          required: item.cost_seeds,
+          current: currentSeeds
+        });
+      }
+
+      // Deduct seeds
+      await client.query(
+        'UPDATE user_progress SET seeds = seeds - $1 WHERE user_id = $2',
+        [item.cost_seeds, req.user.userId]
+      );
+
+      if (item.item_type === 'plant') {
+        // Add plant to user's garden
+        const gardenResult = await client.query(
+          `INSERT INTO user_garden (user_id, item_id, position_x, position_y)
+           VALUES ($1, $2, $3, $4)
+           RETURNING *`,
+          [req.user.userId, itemId, positionX, positionY]
+        );
+
+        await client.query('COMMIT');
+        res.json({ 
+          message: 'Plant purchased successfully',
+          item: gardenResult.rows[0],
+          seedsRemaining: currentSeeds - item.cost_seeds
+        });
+      } else if (item.item_type === 'background') {
+        // Set as active background
+        await client.query(
+          `INSERT INTO user_garden_background (user_id, background_id)
+           VALUES ($1, $2)
+           ON CONFLICT (user_id)
+           DO UPDATE SET background_id = $2, updated_at = CURRENT_TIMESTAMP`,
+          [req.user.userId, itemId]
+        );
+
+        await client.query('COMMIT');
+        res.json({ 
+          message: 'Background purchased and activated',
+          seedsRemaining: currentSeeds - item.cost_seeds
+        });
+      }
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Purchase garden item error:', error);
+      res.status(500).json({ error: 'Server error' });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+// Update plant position in garden
+router.patch('/garden/plant/:plantId/position',
+  writeLimiter,
+  [
+    body('positionX').isInt(),
+    body('positionY').isInt()
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const { plantId } = req.params;
+      const { positionX, positionY } = req.body;
+
+      const result = await pool.query(
+        `UPDATE user_garden
+         SET position_x = $1, position_y = $2
+         WHERE id = $3 AND user_id = $4
+         RETURNING *`,
+        [positionX, positionY, plantId, req.user.userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Plant not found in your garden' });
+      }
+
+      res.json({ message: 'Plant position updated', plant: result.rows[0] });
+    } catch (error) {
+      console.error('Update plant position error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Remove plant from garden
+router.delete('/garden/plant/:plantId',
+  writeLimiter,
+  async (req, res) => {
+    try {
+      const { plantId } = req.params;
+
+      const result = await pool.query(
+        `UPDATE user_garden
+         SET is_active = false
+         WHERE id = $1 AND user_id = $2
+         RETURNING *`,
+        [plantId, req.user.userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Plant not found in your garden' });
+      }
+
+      res.json({ message: 'Plant removed from garden' });
+    } catch (error) {
+      console.error('Remove plant error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 export default router;

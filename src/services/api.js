@@ -210,6 +210,37 @@ class ApiService {
       body: JSON.stringify(surveyData)
     });
   }
+
+  // Garden endpoints
+  async getGardenItems(itemType) {
+    const params = new URLSearchParams();
+    if (itemType) params.append('itemType', itemType);
+    return await this.request(`/user/garden/items?${params}`);
+  }
+
+  async getGarden() {
+    return await this.request('/user/garden');
+  }
+
+  async purchaseGardenItem(itemId, positionX, positionY) {
+    return await this.request('/user/garden/purchase', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, positionX, positionY })
+    });
+  }
+
+  async updatePlantPosition(plantId, positionX, positionY) {
+    return await this.request(`/user/garden/plant/${plantId}/position`, {
+      method: 'PATCH',
+      body: JSON.stringify({ positionX, positionY })
+    });
+  }
+
+  async removePlant(plantId) {
+    return await this.request(`/user/garden/plant/${plantId}`, {
+      method: 'DELETE'
+    });
+  }
 }
 
 export default new ApiService();
