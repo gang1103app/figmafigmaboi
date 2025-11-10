@@ -42,6 +42,7 @@ export const createTables = async (exitOnComplete = true) => {
         best_streak INTEGER DEFAULT 0,
         last_login_date TIMESTAMP WITH TIME ZONE,
         last_activity_date DATE,
+        completed_task_ids JSONB DEFAULT '[]',
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

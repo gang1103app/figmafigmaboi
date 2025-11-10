@@ -134,6 +134,7 @@ class User {
         streak: progress.streak,
         bestStreak: progress.best_streak,
         lastLoginDate: progress.last_login_date,
+        completedTaskIds: progress.completed_task_ids || [],
         ecobuddy: {
           name: ecobuddy.name,
           level: ecobuddy.level,
@@ -188,6 +189,10 @@ class User {
     if (updates.lastLoginDate !== undefined) {
       fields.push(`last_login_date = $${paramCount++}`);
       values.push(updates.lastLoginDate);
+    }
+    if (updates.completedTaskIds !== undefined) {
+      fields.push(`completed_task_ids = $${paramCount++}`);
+      values.push(JSON.stringify(updates.completedTaskIds));
     }
     
     if (fields.length === 0) return null;
