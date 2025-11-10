@@ -12,6 +12,9 @@ ALTER TABLE user_progress
 ALTER TABLE user_progress
   ADD COLUMN IF NOT EXISTS best_streak INTEGER NOT NULL DEFAULT 0;
 
+ALTER TABLE user_progress
+  ADD COLUMN IF NOT EXISTS completed_task_ids JSONB DEFAULT '[]';
+
 -- user_challenges: updated_at used when updating progress
 ALTER TABLE user_challenges
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
