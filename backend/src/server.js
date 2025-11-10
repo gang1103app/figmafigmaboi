@@ -20,6 +20,8 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
   : ['http://localhost:5173'];
 
+console.log('🔒 CORS allowed origins:', allowedOrigins);
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -28,7 +30,10 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.error(`❌ CORS rejected origin: ${origin}`);
+      console.error(`   Allowed origins: ${allowedOrigins.join(', ')}`);
+      console.error(`   To fix: Set FRONTEND_URL environment variable to include: ${origin}`);
+      callback(new Error(`Not allowed by CORS. Origin '${origin}' is not in the allowed list.`));
     }
   },
   credentials: true
