@@ -113,7 +113,7 @@ export default function Tasks() {
 
                 return (
                   <div
-                    key={challenge.id}
+                    key={challenge.user_challenge_id}
                     className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50 hover:border-brand-primary/30 transition-all"
                   >
                     <div className="flex items-start gap-4">
@@ -192,7 +192,7 @@ export default function Tasks() {
             <div className="space-y-3">
               {completedChallenges.slice(0, 5).map(challenge => (
                 <div
-                  key={challenge.id}
+                  key={challenge.user_challenge_id}
                   className="bg-slate-800/30 backdrop-blur-sm rounded-xl p-4 border border-slate-700/30 flex items-center gap-4"
                 >
                   <div className="text-3xl opacity-60">
