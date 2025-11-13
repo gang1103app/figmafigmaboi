@@ -138,9 +138,16 @@ app.listen(PORT, async () => {
     await createTables(false);
     console.log('✅ Database migrations completed successfully');
   } catch (err) {
-    console.error('⚠️  Warning: Database initialization failed on startup:', err);
-    console.error('💡 You can manually trigger migration by sending a POST request to /api/migrate');
-    // Exit with non-zero so Render marks the deployment as failing (optional)
-    process.exitCode = 1;
+    console.error('⚠️  CRITICAL: Database initialization failed on startup:', err.message || err);
+    console.error('💡 The application cannot function without a database connection.');
+    console.error('💡 Please check your DATABASE_URL environment variable and ensure:');
+    console.error('   1. The database server is running and accessible');
+    console.error('   2. The connection string is correct');
+    console.error('   3. The database exists');
+    console.error('   4. The credentials are valid');
+    console.error('');
+    console.error('🔧 You can manually trigger migration by sending a POST request to /api/migrate after fixing the issue');
+    // Exit with non-zero so Render marks the deployment as failing
+    process.exit(1);
   }
 });
