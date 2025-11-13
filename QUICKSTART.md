@@ -51,6 +51,10 @@ PORT=3001
 FRONTEND_URL=http://localhost:5173
 ```
 
+**Note:** The `FRONTEND_URL` is optional. The backend automatically allows:
+- All `localhost` origins (for development)
+- All `*.onrender.com` domains (for Render deployments)
+
 **Replace:**
 - `YOUR_USERNAME` with your PostgreSQL username (often `postgres`)
 - `YOUR_PASSWORD` with your PostgreSQL password
@@ -205,6 +209,7 @@ lsof -ti:3001 | xargs kill -9
 1. Verify backend is running on http://localhost:3001
 2. Check `.env` file has `VITE_API_URL=http://localhost:3001/api`
 3. Restart the frontend dev server after changing `.env`
+4. **Note**: Localhost origins are automatically allowed - no CORS configuration needed for local development
 
 ### Migration Fails
 
