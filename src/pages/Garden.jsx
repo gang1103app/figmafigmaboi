@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
@@ -11,6 +11,9 @@ export default function Garden() {
   const [shopTab, setShopTab] = useState('plants') // 'plants' or 'backgrounds'
   const [error, setError] = useState(null)
   const [purchaseMessage, setPurchaseMessage] = useState(null)
+  const [draggedPlant, setDraggedPlant] = useState(null)
+  const [tempPositions, setTempPositions] = useState({})
+  const gardenAreaRef = useRef(null)
 
   useEffect(() => {
     loadGardenData()
@@ -60,6 +63,70 @@ export default function Garden() {
       setTimeout(() => setError(null), 3000)
     }
   }
+
+  const handleDragStart = (e, plant) => {
+    setDraggedPlant(plant)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    if (!draggedPlant || !gardenAreaRef.current) return
+
+    const rect = gardenAreaRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    // Store temporary position
+    setTempPositions(prev => ({
+      ...prev,
+      [draggedPlant.id]: { x, y }
+    }))
+
+    setDraggedPlant(null)
+  }
+
+  const handlePlantClick = async () => {
+    try {
+      setError(null)
+      setPurchaseMessage(null)
+
+      // Save all temp positions to backend
+      const updatePromises = Object.entries(tempPositions).map(([plantId, pos]) =>
+        api.updatePlantPosition(parseInt(plantId), Math.round(pos.x), Math.round(pos.y))
+      )
+
+      await Promise.all(updatePromises)
+      
+      setPurchaseMessage('Plants placed successfully! 🌱')
+      setTempPositions({})
+      
+      // Refresh garden data
+      await loadGardenData()
+
+      setTimeout(() => setPurchaseMessage(null), 3000)
+    } catch (error) {
+      console.error('Failed to save plant positions:', error)
+      setError(error.message || 'Failed to save plant positions')
+      setTimeout(() => setError(null), 3000)
+    }
+  }
+
+  const getPlantPosition = (plant) => {
+    // Check if there's a temp position first
+    if (tempPositions[plant.id]) {
+      return tempPositions[plant.id]
+    }
+    // Otherwise use saved position
+    return { x: plant.position_x || 0, y: plant.position_y || 0 }
+  }
+
+  const hasUnsavedPositions = Object.keys(tempPositions).length > 0
 
   const userSeeds = user?.seeds || 0
 
@@ -124,47 +191,117 @@ export default function Garden() {
         {/* Garden View */}
         {activeTab === 'garden' && (
           <div className="space-y-6">
-            {/* Background Section */}
+            {/* Background Section with Drop Zone */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
-              <h2 className="text-xl font-semibold mb-4">Background</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Garden</h2>
+                {hasUnsavedPositions && (
+                  <button
+                    onClick={handlePlantClick}
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    🌱 Plant!
+                  </button>
+                )}
+              </div>
+              
               {garden.background && garden.background.background_id ? (
-                <div className="relative h-48 rounded-lg overflow-hidden">
-                  <img
-                    src={garden.background.image_path}
-                    alt={garden.background.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                    <p className="text-white font-semibold">{garden.background.name}</p>
-                  </div>
+                <div
+                  ref={gardenAreaRef}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  className="relative h-96 rounded-lg overflow-hidden cursor-crosshair"
+                  style={{
+                    backgroundImage: `url(${garden.background.image_path})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  {/* Render planted items on background */}
+                  {garden.plants.map(plant => {
+                    const pos = getPlantPosition(plant)
+                    const hasPosition = pos.x !== 0 || pos.y !== 0 || tempPositions[plant.id]
+                    
+                    if (!hasPosition) return null
+
+                    return (
+                      <div
+                        key={plant.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, plant)}
+                        className="absolute cursor-move"
+                        style={{
+                          left: `${pos.x}px`,
+                          top: `${pos.y}px`,
+                          transform: 'translate(-50%, -50%)',
+                          zIndex: 10
+                        }}
+                      >
+                        <img
+                          src={plant.image_path}
+                          alt={plant.name}
+                          className="w-16 h-16 object-contain pointer-events-none"
+                          title={plant.name}
+                        />
+                      </div>
+                    )
+                  })}
+                  
+                  {/* Instructions overlay when no plants placed */}
+                  {garden.plants.length > 0 && !garden.plants.some(p => {
+                    const pos = getPlantPosition(p)
+                    return pos.x !== 0 || pos.y !== 0 || tempPositions[p.id]
+                  }) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                      <div className="text-center text-white">
+                        <div className="text-4xl mb-2">🌱</div>
+                        <p className="text-lg font-semibold">Drag plants from below onto your garden!</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="h-48 rounded-lg bg-slate-900/50 border-2 border-dashed border-slate-700 flex items-center justify-center">
-                  <p className="text-slate-500">No background selected. Visit the shop!</p>
+                <div className="h-96 rounded-lg bg-slate-900/50 border-2 border-dashed border-slate-700 flex items-center justify-center">
+                  <p className="text-slate-500">No background selected. Visit the shop to buy a background!</p>
                 </div>
               )}
             </div>
 
-            {/* Plants Section */}
+            {/* Plants Inventory Section */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
-              <h2 className="text-xl font-semibold mb-4">Plants ({garden.plants.length})</h2>
+              <h2 className="text-xl font-semibold mb-4">Your Plants ({garden.plants.length})</h2>
               {garden.plants.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {garden.plants.map(plant => (
-                    <div
-                      key={plant.id}
-                      className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/50 hover:border-brand-primary/30 transition-all"
-                    >
-                      <div className="aspect-square bg-slate-800/50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={plant.image_path}
-                          alt={plant.name}
-                          className="max-w-full max-h-full object-contain"
-                        />
+                  {garden.plants.map(plant => {
+                    const pos = getPlantPosition(plant)
+                    const isPlaced = pos.x !== 0 || pos.y !== 0 || tempPositions[plant.id]
+                    
+                    return (
+                      <div
+                        key={plant.id}
+                        draggable={garden.background && garden.background.background_id}
+                        onDragStart={(e) => handleDragStart(e, plant)}
+                        className={`bg-slate-900/50 rounded-lg p-3 border border-slate-700/50 hover:border-brand-primary/30 transition-all ${
+                          garden.background && garden.background.background_id ? 'cursor-move' : 'cursor-not-allowed'
+                        } ${isPlaced ? 'opacity-50' : ''}`}
+                        title={garden.background && garden.background.background_id ? 'Drag to place in garden' : 'Buy a background first'}
+                      >
+                        <div className="aspect-square bg-slate-800/50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={plant.image_path}
+                            alt={plant.name}
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </div>
+                        <p className="text-sm font-medium text-center truncate">{plant.name}</p>
+                        {isPlaced && (
+                          <p className="text-xs text-green-400 text-center mt-1">
+                            {tempPositions[plant.id] ? '📍 Temporary' : '✓ Placed'}
+                          </p>
+                        )}
                       </div>
-                      <p className="text-sm font-medium text-center truncate">{plant.name}</p>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8 text-slate-500">
