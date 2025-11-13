@@ -241,6 +241,34 @@ The application requires a full-stack deployment with:
 
 Configure environment variables as needed for your deployment platform.
 
+### CORS Configuration
+
+The backend automatically allows:
+- All `localhost` origins (for development)
+- All `*.onrender.com` domains (for Render deployments)
+- Explicit origins set in the `FRONTEND_URL` environment variable
+
+For Render deployments, you typically don't need to set `FRONTEND_URL` as all Render domains are automatically allowed.
+
+### Troubleshooting CORS Issues
+
+If you see "NetworkError when attempting to fetch resource" or CORS errors:
+
+1. **Check the backend logs** - The server now logs all CORS decisions:
+   ```
+   ✓ CORS: Allowing Render subdomain: https://your-app.onrender.com
+   ✗ CORS: Rejecting origin: https://example.com
+   ```
+
+2. **For Render deployments** - No configuration needed, all `*.onrender.com` domains are allowed
+
+3. **For custom domains** - Set the `FRONTEND_URL` environment variable:
+   ```
+   FRONTEND_URL=https://your-custom-domain.com,https://another-domain.com
+   ```
+
+4. **For local development** - All localhost variants are automatically allowed
+
 ## Contributing
 
 This is a demonstration project for the Energy Saving Teen app. For contributions or questions, please open an issue or pull request.
