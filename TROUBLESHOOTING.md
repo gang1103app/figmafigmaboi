@@ -184,6 +184,40 @@ npm run db:migrate
 - Reset PostgreSQL password if needed
 - Update DATABASE_URL in `backend/.env`
 
+### DATABASE_URL Not Set (Production/Render)
+
+**Symptom**: Server logs show "FATAL: DATABASE_URL environment variable is not set!" or attempts to connect to localhost (127.0.0.1:5432) with ECONNREFUSED errors
+
+**Root Cause**: The DATABASE_URL environment variable is not configured in the production environment (e.g., Render service)
+
+**Solution for Render**:
+
+1. **Check Environment Variables**:
+   - Go to your Render dashboard
+   - Select your backend service (e.g., `ecobuddy-1-8-api`)
+   - Go to "Environment" tab
+   - Verify that `DATABASE_URL` is listed
+
+2. **Link Database to Service**:
+   - If `DATABASE_URL` is missing, click "Add Environment Variable"
+   - Key: `DATABASE_URL`
+   - Value: Select "From Database" and choose your PostgreSQL instance
+   - Save changes
+
+3. **Manual Database Connection String**:
+   - If not using Render's managed database, get the connection string from your database provider
+   - Format: `postgresql://username:password@hostname:port/database?sslmode=require`
+   - Add as environment variable in Render
+
+4. **Redeploy**:
+   - After adding/updating DATABASE_URL, trigger a new deployment
+   - The service should now connect successfully
+
+**Expected Behavior After Fix**:
+- Server logs will show: `✅ Database connection test successful (host=your-db-host)`
+- No more localhost connection attempts
+- Login/signup will work correctly
+
 ## API Connection Issues
 
 ### Cannot Reach API
