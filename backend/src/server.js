@@ -20,16 +20,41 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
   : ['http://localhost:5173'];
 
+// Log CORS configuration on startup
+console.log('🔒 CORS Configuration:');
+console.log('  Allowed origins:', allowedOrigins);
+console.log('  Wildcard patterns: *.onrender.com, localhost:*');
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    if (!origin) {
+      console.log('✓ CORS: Allowing request with no origin');
+      return callback(null, true);
     }
+    
+    // Check if origin is in the explicit allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log(`✓ CORS: Allowing origin: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Allow all localhost origins for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      console.log(`✓ CORS: Allowing localhost origin: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Allow all *.onrender.com subdomains (for Render preview deployments)
+    if (origin.endsWith('.onrender.com')) {
+      console.log(`✓ CORS: Allowing Render subdomain: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Reject all other origins
+    console.warn(`✗ CORS: Rejecting origin: ${origin}`);
+    console.warn(`  Allowed origins: ${allowedOrigins.join(', ')}`);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true
 }));
