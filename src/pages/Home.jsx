@@ -2,10 +2,10 @@ import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 const ACCESSORIES = [
-  { id: 'sunglasses', name: 'Sunglasses', emoji: '🕶️', cost: 150, type: 'glasses', position: { top: '28%', left: '50%' } },
-  { id: 'tophat', name: 'Top Hat', emoji: '🎩', cost: 250, type: 'hat', position: { top: '10%', left: '50%' } },
-  { id: 'crown', name: 'Crown', emoji: '👑', cost: 300, type: 'hat', position: { top: '8%', left: '50%' } },
-  { id: 'scarf', name: 'Scarf', emoji: '🧣', cost: 120, type: 'neck', position: { top: '55%', left: '50%' } },
+  { id: 'sunglasses', name: 'Sunglasses', emoji: '🕶️', cost: 500, type: 'glasses', position: { top: '28%', left: '50%' } },
+  { id: 'tophat', name: 'Top Hat', emoji: '🎩', cost: 800, type: 'hat', position: { top: '10%', left: '50%' } },
+  { id: 'crown', name: 'Crown', emoji: '👑', cost: 3000, type: 'hat', position: { top: '8%', left: '50%' } },
+  { id: 'scarf', name: 'Scarf', emoji: '🧣', cost: 600, type: 'neck', position: { top: '55%', left: '50%' } },
 ]
 
 const MOODS = {
