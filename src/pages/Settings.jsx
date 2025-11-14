@@ -15,6 +15,7 @@ export default function Settings() {
   const [loadingSurvey, setLoadingSurvey] = useState(true)
   const [notificationPermission, setNotificationPermission] = useState('default')
   const [testingNotification, setTestingNotification] = useState(false)
+  const [testing10sNotification, setTesting10sNotification] = useState(false)
 
   useEffect(() => {
     loadSurvey()
@@ -80,6 +81,41 @@ export default function Settings() {
       alert('Failed to send test notification. Please check your browser settings.')
     } finally {
       setTestingNotification(false)
+    }
+  }
+
+  const handleTest10sNotification = async () => {
+    if (notificationPermission !== 'granted') {
+      await handleRequestNotificationPermission()
+      return
+    }
+    
+    setTesting10sNotification(true)
+    try {
+      // Show immediate feedback
+      alert('Notification will be sent in 10 seconds!')
+      
+      // Schedule notification after 10 seconds
+      setTimeout(async () => {
+        try {
+          await notificationService.showNotification(
+            '⏰ 10 Second Test Notification',
+            {
+              body: '10 seconds have passed! Your notifications are working perfectly.',
+              tag: 'test-10s',
+              data: { type: 'test-10s' }
+            }
+          )
+        } catch (error) {
+          console.error('10s test notification failed:', error)
+        } finally {
+          setTesting10sNotification(false)
+        }
+      }, 10000)
+    } catch (error) {
+      console.error('Failed to schedule test notification:', error)
+      alert('Failed to schedule test notification. Please check your browser settings.')
+      setTesting10sNotification(false)
     }
   }
 
@@ -186,13 +222,22 @@ export default function Settings() {
                 </div>
                 <div className="flex gap-2 ml-4">
                   {notificationPermission === 'granted' && (
-                    <button
-                      onClick={handleTestNotification}
-                      disabled={testingNotification}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    >
-                      {testingNotification ? 'Sending...' : 'Test'}
-                    </button>
+                    <>
+                      <button
+                        onClick={handleTestNotification}
+                        disabled={testingNotification}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      >
+                        {testingNotification ? 'Sending...' : 'Test Now'}
+                      </button>
+                      <button
+                        onClick={handleTest10sNotification}
+                        disabled={testing10sNotification}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {testing10sNotification ? 'Scheduled...' : 'Test in 10s'}
+                      </button>
+                    </>
                   )}
                   {notificationPermission !== 'granted' && (
                     <button
