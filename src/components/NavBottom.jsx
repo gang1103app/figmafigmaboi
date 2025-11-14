@@ -9,7 +9,8 @@ export default function NavBottom() {
     { path: '/garden', label: 'Garden', icon: '🌱' },
     { path: '/social', label: 'Social', icon: '👥' },
     { path: '/analytics', label: 'Analytics', icon: '📊' },
-    { path: '/tasks', label: 'Tasks', icon: '✓' }
+    { path: '/tasks', label: 'Tasks', icon: '✓' },
+    { path: '/settings', label: 'Settings', icon: '⚙️' }
   ]
   
   return (
