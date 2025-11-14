@@ -44,10 +44,12 @@ When you log in or sign up, the app will request permission to send notification
 
 ### Service Worker
 
-A service worker (`/public/sw.js`) is registered when you grant notification permission. This enables:
+A service worker (`/public/sw.js`) is registered automatically when the app loads. This enables:
 - Notifications even when the browser tab is closed
 - Notification click handling (focuses or opens the app)
 - Future push notification support
+
+The service worker is registered early during app initialization (in `src/main.jsx`), ensuring notifications can be sent even when the tab is not in focus or has been closed.
 
 ### Notification Settings
 
@@ -80,6 +82,7 @@ Navigate to **Settings > Notifications** to manage your preferences:
 
 ```
 src/
+├── main.jsx                       # App entry point - registers service worker
 ├── services/
 │   └── notificationService.js     # Core notification service
 ├── context/

@@ -54,17 +54,6 @@ export default function Settings() {
   const handleRequestNotificationPermission = async () => {
     const permission = await notificationService.requestPermission()
     setNotificationPermission(permission)
-    if (permission === 'granted') {
-      // Register service worker for persistent notifications
-      if ('serviceWorker' in navigator) {
-        try {
-          await navigator.serviceWorker.register('/sw.js')
-          console.log('Service Worker registered for notifications')
-        } catch (error) {
-          console.error('Service Worker registration failed:', error)
-        }
-      }
-    }
   }
 
   const handleTestNotification = async () => {

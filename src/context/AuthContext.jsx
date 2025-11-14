@@ -82,14 +82,7 @@ export function AuthProvider({ children }) {
     // Only request if browser supports notifications and permission hasn't been decided
     if (notificationService.shouldRequestPermission()) {
       try {
-        const permission = await notificationService.requestPermission()
-        if (permission === 'granted') {
-          // Register service worker for persistent notifications
-          if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register('/sw.js')
-            console.log('Service Worker registered for notifications')
-          }
-        }
+        await notificationService.requestPermission()
       } catch (error) {
         console.error('Failed to request notification permission:', error)
       }

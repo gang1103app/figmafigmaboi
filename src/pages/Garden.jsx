@@ -380,7 +380,8 @@ export default function Garden() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {shopTab === 'plants' && availableItems.plants.map(plant => {
                 const canAfford = userSeeds >= plant.cost_seeds
-                const alreadyOwned = garden.plants.some(p => p.item_id === plant.id)
+                const ownedCount = garden.plants.filter(p => p.item_id === plant.id).length
+                const atPurchaseLimit = ownedCount >= 2
                 
                 return (
                   <div
@@ -398,19 +399,26 @@ export default function Garden() {
                       <div className="flex-grow">
                         <h3 className="font-semibold text-white mb-1">{plant.name}</h3>
                         <p className="text-sm text-slate-400 mb-2">{plant.description}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-yellow-400 font-semibold">
-                            🌱 {plant.cost_seeds} seeds
-                          </span>
-                          {alreadyOwned ? (
-                            <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded">
-                              ✓ Owned
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-yellow-400 font-semibold">
+                              🌱 {plant.cost_seeds} seeds
+                            </span>
+                            {ownedCount > 0 && (
+                              <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+                                Owned: {ownedCount}/2
+                              </span>
+                            )}
+                          </div>
+                          {atPurchaseLimit ? (
+                            <span className="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded whitespace-nowrap">
+                              ✓ Max (2)
                             </span>
                           ) : (
                             <button
                               onClick={() => handlePurchase(plant)}
                               disabled={!canAfford}
-                              className={`px-4 py-1 rounded-lg text-sm font-medium transition-colors ${
+                              className={`px-4 py-1 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                                 canAfford
                                   ? 'bg-brand-primary hover:bg-brand-primary/80 text-white'
                                   : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'

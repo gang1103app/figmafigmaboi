@@ -655,6 +655,22 @@ router.post('/garden/purchase',
       );
 
       if (item.item_type === 'plant') {
+        // Check if user already has 2 of this plant type
+        const countResult = await client.query(
+          `SELECT COUNT(*) as count FROM user_garden 
+           WHERE user_id = $1 AND item_id = $2 AND is_active = true`,
+          [req.user.userId, itemId]
+        );
+        
+        const currentCount = parseInt(countResult.rows[0].count);
+        if (currentCount >= 2) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ 
+            error: 'Maximum purchase limit reached',
+            message: 'You can only own 2 of each plant type'
+          });
+        }
+
         // Add plant to user's garden
         const gardenResult = await client.query(
           `INSERT INTO user_garden (user_id, item_id, position_x, position_y)
