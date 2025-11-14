@@ -126,6 +126,33 @@ export default function Garden() {
     return { x: plant.position_x || 0, y: plant.position_y || 0 }
   }
 
+  const handleRemovePlant = async (plantId) => {
+    try {
+      setError(null)
+      setPurchaseMessage(null)
+
+      await api.removePlant(plantId)
+      
+      setPurchaseMessage('Plant removed from garden! You can replant it anytime. 🌱')
+      
+      // Clear temp position if exists
+      setTempPositions(prev => {
+        const updated = { ...prev }
+        delete updated[plantId]
+        return updated
+      })
+      
+      // Refresh garden data
+      await loadGardenData()
+
+      setTimeout(() => setPurchaseMessage(null), 3000)
+    } catch (error) {
+      console.error('Failed to remove plant:', error)
+      setError(error.message || 'Failed to remove plant')
+      setTimeout(() => setError(null), 3000)
+    }
+  }
+
   const hasUnsavedPositions = Object.keys(tempPositions).length > 0
 
   const userSeeds = user?.seeds || 0
@@ -295,9 +322,18 @@ export default function Garden() {
                         </div>
                         <p className="text-sm font-medium text-center truncate">{plant.name}</p>
                         {isPlaced && (
-                          <p className="text-xs text-green-400 text-center mt-1">
-                            {tempPositions[plant.id] ? '📍 Temporary' : '✓ Placed'}
-                          </p>
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-green-400 text-center">
+                              {tempPositions[plant.id] ? '📍 Temporary' : '✓ Placed'}
+                            </p>
+                            <button
+                              onClick={() => handleRemovePlant(plant.id)}
+                              className="w-full text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 px-2 py-1 rounded transition-colors"
+                              title="Remove from garden (keeps in inventory)"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         )}
                       </div>
                     )
