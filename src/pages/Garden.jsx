@@ -380,7 +380,8 @@ export default function Garden() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {shopTab === 'plants' && availableItems.plants.map(plant => {
                 const canAfford = userSeeds >= plant.cost_seeds
-                const alreadyOwned = garden.plants.some(p => p.item_id === plant.id)
+                const ownedCount = garden.plants.filter(p => p.item_id === plant.id).length
+                const atPurchaseLimit = ownedCount >= 2
                 
                 return (
                   <div
@@ -402,9 +403,14 @@ export default function Garden() {
                           <span className="text-yellow-400 font-semibold">
                             🌱 {plant.cost_seeds} seeds
                           </span>
-                          {alreadyOwned ? (
-                            <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded">
-                              ✓ Owned
+                          {ownedCount > 0 && (
+                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded mr-2">
+                              Owned: {ownedCount}/2
+                            </span>
+                          )}
+                          {atPurchaseLimit ? (
+                            <span className="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded">
+                              ✓ Max (2)
                             </span>
                           ) : (
                             <button
