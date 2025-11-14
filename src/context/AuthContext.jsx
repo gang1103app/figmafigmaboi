@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import api from '../services/api'
+import notificationService from '../services/notificationService'
 
 const AuthContext = createContext(null)
 
@@ -51,6 +52,10 @@ export function AuthProvider({ children }) {
       // Fetch full profile after signup
       const response = await api.getProfile()
       setUser(response.profile)
+      
+      // Request notification permission after signup
+      requestNotificationPermission()
+      
       return { success: true, user: response.profile }
     } catch (error) {
       return { success: false, error: error.message }
@@ -63,9 +68,31 @@ export function AuthProvider({ children }) {
       // Fetch full profile after login
       const response = await api.getProfile()
       setUser(response.profile)
+      
+      // Request notification permission after login if not already granted
+      requestNotificationPermission()
+      
       return { success: true }
     } catch (error) {
       return { success: false, error: error.message }
+    }
+  }
+
+  const requestNotificationPermission = async () => {
+    // Only request if browser supports notifications and permission hasn't been decided
+    if (notificationService.shouldRequestPermission()) {
+      try {
+        const permission = await notificationService.requestPermission()
+        if (permission === 'granted') {
+          // Register service worker for persistent notifications
+          if ('serviceWorker' in navigator) {
+            await navigator.serviceWorker.register('/sw.js')
+            console.log('Service Worker registered for notifications')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to request notification permission:', error)
+      }
     }
   }
 

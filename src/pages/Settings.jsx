@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useNotifications } from '../context/NotificationContext'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import EnergySurvey from '../components/EnergySurvey'
@@ -7,14 +8,8 @@ import notificationService from '../services/notificationService'
 
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
+  const { notificationSettings, updateNotificationSettings } = useNotifications()
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState({
-    daily: true,
-    challenges: true,
-    friends: false,
-    achievements: true,
-    leaderboard: true
-  })
   const [showSurvey, setShowSurvey] = useState(false)
   const [survey, setSurvey] = useState(null)
   const [loadingSurvey, setLoadingSurvey] = useState(true)
@@ -46,10 +41,8 @@ export default function Settings() {
   }
 
   const toggleNotification = (key) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }))
+    const newValue = !notificationSettings[key]
+    updateNotificationSettings({ [key]: newValue })
   }
 
   const handleSurveyComplete = async () => {
@@ -222,12 +215,12 @@ export default function Settings() {
                 <button
                   onClick={() => toggleNotification('daily')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.daily ? 'bg-brand-primary' : 'bg-slate-600'
+                    notificationSettings.daily ? 'bg-brand-primary' : 'bg-slate-600'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.daily ? 'translate-x-6' : 'translate-x-1'
+                      notificationSettings.daily ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -243,12 +236,12 @@ export default function Settings() {
                 <button
                   onClick={() => toggleNotification('friends')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.friends ? 'bg-brand-primary' : 'bg-slate-600'
+                    notificationSettings.friends ? 'bg-brand-primary' : 'bg-slate-600'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.friends ? 'translate-x-6' : 'translate-x-1'
+                      notificationSettings.friends ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -264,12 +257,12 @@ export default function Settings() {
                 <button
                   onClick={() => toggleNotification('leaderboard')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.leaderboard ? 'bg-brand-primary' : 'bg-slate-600'
+                    notificationSettings.leaderboard ? 'bg-brand-primary' : 'bg-slate-600'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.leaderboard ? 'translate-x-6' : 'translate-x-1'
+                      notificationSettings.leaderboard ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -285,12 +278,12 @@ export default function Settings() {
                 <button
                   onClick={() => toggleNotification('achievements')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.achievements ? 'bg-brand-primary' : 'bg-slate-600'
+                    notificationSettings.achievements ? 'bg-brand-primary' : 'bg-slate-600'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.achievements ? 'translate-x-6' : 'translate-x-1'
+                      notificationSettings.achievements ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
