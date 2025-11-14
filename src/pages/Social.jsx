@@ -13,6 +13,7 @@ export default function Social() {
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState(null)
 
+  // Load leaderboard or friends data when tab changes or user is available
   useEffect(() => {
     if (!user) return
     
@@ -38,6 +39,7 @@ export default function Social() {
     loadData()
   }, [activeTab, user])
 
+  // Debounced search for users - waits 300ms after user stops typing
   useEffect(() => {
     const searchForUsers = async () => {
       setSearching(true)
