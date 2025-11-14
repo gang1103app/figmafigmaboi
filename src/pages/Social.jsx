@@ -195,9 +195,16 @@ export default function Social() {
             ) : (
               <div className="space-y-3">
                 {leaderboard.map((person, index) => {
+                  if (!person || !person.id) return null
                   const isCurrentUser = person.id === user.id
                   const rank = index + 1
-                  const accessories = person.accessories ? JSON.parse(person.accessories) : []
+                  let accessories = []
+                  try {
+                    accessories = person.accessories ? JSON.parse(person.accessories) : []
+                  } catch (e) {
+                    console.error('Failed to parse accessories:', e)
+                    accessories = []
+                  }
                   
                   return (
                     <div
@@ -282,7 +289,14 @@ export default function Social() {
             ) : (
               <div className="space-y-3">
                 {friends.map(friend => {
-                  const accessories = friend.accessories ? JSON.parse(friend.accessories) : []
+                  if (!friend || !friend.id) return null
+                  let accessories = []
+                  try {
+                    accessories = friend.accessories ? JSON.parse(friend.accessories) : []
+                  } catch (e) {
+                    console.error('Failed to parse accessories:', e)
+                    accessories = []
+                  }
                   
                   return (
                     <div
@@ -353,7 +367,8 @@ export default function Social() {
             {searchResults.length > 0 && (
               <div className="space-y-3">
                 {searchResults.map(result => {
-                  const isFriend = friends.some(f => f.id === result.id)
+                  if (!result || !result.id) return null
+                  const isFriend = friends.some(f => f && f.id === result.id)
                   
                   return (
                     <div
