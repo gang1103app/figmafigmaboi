@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import EnergySurvey from '../components/EnergySurvey'
+import notificationService from '../services/notificationService'
 
 export default function Settings() {
   const { user, logout, updateUser } = useAuth()
@@ -11,14 +12,19 @@ export default function Settings() {
     daily: true,
     challenges: true,
     friends: false,
-    achievements: true
+    achievements: true,
+    leaderboard: true
   })
   const [showSurvey, setShowSurvey] = useState(false)
   const [survey, setSurvey] = useState(null)
   const [loadingSurvey, setLoadingSurvey] = useState(true)
+  const [notificationPermission, setNotificationPermission] = useState('default')
+  const [testingNotification, setTestingNotification] = useState(false)
 
   useEffect(() => {
     loadSurvey()
+    // Check notification permission status
+    setNotificationPermission(notificationService.checkPermission())
   }, [])
 
   const loadSurvey = async () => {
@@ -49,6 +55,39 @@ export default function Settings() {
   const handleSurveyComplete = async () => {
     setShowSurvey(false)
     await loadSurvey()
+  }
+
+  const handleRequestNotificationPermission = async () => {
+    const permission = await notificationService.requestPermission()
+    setNotificationPermission(permission)
+    if (permission === 'granted') {
+      // Register service worker for persistent notifications
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator.serviceWorker.register('/sw.js')
+          console.log('Service Worker registered for notifications')
+        } catch (error) {
+          console.error('Service Worker registration failed:', error)
+        }
+      }
+    }
+  }
+
+  const handleTestNotification = async () => {
+    if (notificationPermission !== 'granted') {
+      await handleRequestNotificationPermission()
+      return
+    }
+    
+    setTestingNotification(true)
+    try {
+      await notificationService.testNotification()
+    } catch (error) {
+      console.error('Test notification failed:', error)
+      alert('Failed to send test notification. Please check your browser settings.')
+    } finally {
+      setTestingNotification(false)
+    }
   }
 
   return (
@@ -139,11 +178,46 @@ export default function Settings() {
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">Notifications</h2>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
+            {/* Browser Notification Permission */}
+            <div className="p-4 border-b border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-medium text-white">Browser Notifications</div>
+                  <div className="text-sm text-slate-400">
+                    {notificationPermission === 'granted' 
+                      ? 'Enabled - You will receive notifications even when the app is closed'
+                      : notificationPermission === 'denied'
+                      ? 'Blocked - Please enable notifications in your browser settings'
+                      : 'Allow notifications to stay updated on friend activity and reminders'}
+                  </div>
+                </div>
+                <div className="flex gap-2 ml-4">
+                  {notificationPermission === 'granted' && (
+                    <button
+                      onClick={handleTestNotification}
+                      disabled={testingNotification}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {testingNotification ? 'Sending...' : 'Test'}
+                    </button>
+                  )}
+                  {notificationPermission !== 'granted' && (
+                    <button
+                      onClick={handleRequestNotificationPermission}
+                      className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Enable
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="p-4 border-b border-slate-700/50">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium text-white">Daily Reminders</div>
-                  <div className="text-sm text-slate-400">Get reminded to check your energy usage</div>
+                  <div className="text-sm text-slate-400">Get reminded after 6 PM if you haven't logged in</div>
                 </div>
                 <button
                   onClick={() => toggleNotification('daily')}
@@ -163,29 +237,8 @@ export default function Settings() {
             <div className="p-4 border-b border-slate-700/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-white">Challenge Updates</div>
-                  <div className="text-sm text-slate-400">Notifications for new and completed challenges</div>
-                </div>
-                <button
-                  onClick={() => toggleNotification('challenges')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notifications.challenges ? 'bg-brand-primary' : 'bg-slate-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notifications.challenges ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 border-b border-slate-700/50">
-              <div className="flex items-center justify-between">
-                <div>
                   <div className="font-medium text-white">Friend Activity</div>
-                  <div className="text-sm text-slate-400">Updates when friends complete challenges</div>
+                  <div className="text-sm text-slate-400">Get notified when friends complete tasks</div>
                 </div>
                 <button
                   onClick={() => toggleNotification('friends')}
@@ -196,6 +249,27 @@ export default function Settings() {
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                       notifications.friends ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 border-b border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-white">Leaderboard Updates</div>
+                  <div className="text-sm text-slate-400">Get notified when your leaderboard position changes</div>
+                </div>
+                <button
+                  onClick={() => toggleNotification('leaderboard')}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    notifications.leaderboard ? 'bg-brand-primary' : 'bg-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      notifications.leaderboard ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>

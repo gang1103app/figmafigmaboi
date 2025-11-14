@@ -1,26 +1,37 @@
 import React, { useState } from 'react'
 import api from '../services/api'
 
-// Average electricity rates by state ($/kWh) - US data
-const STATE_RATES = {
-  'AL': 0.124, 'AK': 0.228, 'AZ': 0.134, 'AR': 0.111, 'CA': 0.251,
-  'CO': 0.136, 'CT': 0.221, 'DE': 0.129, 'FL': 0.123, 'GA': 0.128,
-  'HI': 0.319, 'ID': 0.107, 'IL': 0.130, 'IN': 0.134, 'IA': 0.125,
-  'KS': 0.137, 'KY': 0.113, 'LA': 0.110, 'ME': 0.168, 'MD': 0.137,
-  'MA': 0.222, 'MI': 0.171, 'MN': 0.139, 'MS': 0.117, 'MO': 0.118,
-  'MT': 0.115, 'NE': 0.111, 'NV': 0.129, 'NH': 0.202, 'NJ': 0.162,
-  'NM': 0.135, 'NY': 0.186, 'NC': 0.117, 'ND': 0.108, 'OH': 0.133,
-  'OK': 0.113, 'OR': 0.112, 'PA': 0.142, 'RI': 0.225, 'SC': 0.133,
-  'SD': 0.123, 'TN': 0.119, 'TX': 0.122, 'UT': 0.111, 'VT': 0.183,
-  'VA': 0.126, 'WA': 0.105, 'WV': 0.120, 'WI': 0.146, 'WY': 0.114
+// Average electricity rates by province (CAD/kWh) - Canadian data
+const PROVINCE_RATES = {
+  'AB': 0.168, // Alberta
+  'BC': 0.124, // British Columbia
+  'MB': 0.102, // Manitoba
+  'NB': 0.129, // New Brunswick
+  'NL': 0.137, // Newfoundland and Labrador
+  'NS': 0.173, // Nova Scotia
+  'NT': 0.370, // Northwest Territories
+  'NU': 0.380, // Nunavut
+  'ON': 0.150, // Ontario
+  'PE': 0.165, // Prince Edward Island
+  'QC': 0.083, // Quebec
+  'SK': 0.165, // Saskatchewan
+  'YT': 0.200  // Yukon
 }
 
-const US_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+const CANADIAN_PROVINCES = [
+  { code: 'AB', name: 'Alberta' },
+  { code: 'BC', name: 'British Columbia' },
+  { code: 'MB', name: 'Manitoba' },
+  { code: 'NB', name: 'New Brunswick' },
+  { code: 'NL', name: 'Newfoundland and Labrador' },
+  { code: 'NS', name: 'Nova Scotia' },
+  { code: 'NT', name: 'Northwest Territories' },
+  { code: 'NU', name: 'Nunavut' },
+  { code: 'ON', name: 'Ontario' },
+  { code: 'PE', name: 'Prince Edward Island' },
+  { code: 'QC', name: 'Quebec' },
+  { code: 'SK', name: 'Saskatchewan' },
+  { code: 'YT', name: 'Yukon' }
 ]
 
 export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey = null }) {
@@ -36,12 +47,12 @@ export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
-  const handleStateChange = (e) => {
-    const stateCode = e.target.value
-    const rate = STATE_RATES[stateCode] || ''
+  const handleProvinceChange = (e) => {
+    const provinceCode = e.target.value
+    const rate = PROVINCE_RATES[provinceCode] || ''
     setFormData({
       ...formData,
-      state_code: stateCode,
+      state_code: provinceCode,
       electricity_rate: rate
     })
   }
@@ -53,7 +64,7 @@ export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey
       newErrors.location = 'City is required'
     }
     if (!formData.state_code) {
-      newErrors.state_code = 'State is required'
+      newErrors.state_code = 'Province/Territory is required'
     }
     if (!formData.electricity_rate || parseFloat(formData.electricity_rate) <= 0) {
       newErrors.electricity_rate = 'Valid electricity rate is required'
@@ -114,7 +125,7 @@ export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey
             type="text"
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            placeholder="e.g., San Francisco"
+            placeholder="e.g., Toronto"
             className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-brand-primary transition-colors ${
               errors.location ? 'border-red-500' : 'border-slate-600/50'
             }`}
@@ -124,21 +135,21 @@ export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey
           )}
         </div>
 
-        {/* State */}
+        {/* Province */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            State <span className="text-red-400">*</span>
+            Province/Territory <span className="text-red-400">*</span>
           </label>
           <select
             value={formData.state_code}
-            onChange={handleStateChange}
+            onChange={handleProvinceChange}
             className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white focus:outline-none focus:border-brand-primary transition-colors ${
               errors.state_code ? 'border-red-500' : 'border-slate-600/50'
             }`}
           >
-            <option value="">Select State</option>
-            {US_STATES.map(state => (
-              <option key={state} value={state}>{state}</option>
+            <option value="">Select Province/Territory</option>
+            {CANADIAN_PROVINCES.map(province => (
+              <option key={province.code} value={province.code}>{province.name}</option>
             ))}
           </select>
           {errors.state_code && (
@@ -149,14 +160,14 @@ export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey
         {/* Electricity Rate */}
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            Electricity Rate ($/kWh) <span className="text-red-400">*</span>
+            Electricity Rate (CAD/kWh) <span className="text-red-400">*</span>
           </label>
           <input
             type="number"
             step="0.001"
             value={formData.electricity_rate}
             onChange={(e) => setFormData({ ...formData, electricity_rate: e.target.value })}
-            placeholder="0.130"
+            placeholder="0.150"
             className={`w-full px-4 py-3 bg-slate-700/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-brand-primary transition-colors ${
               errors.electricity_rate ? 'border-red-500' : 'border-slate-600/50'
             }`}
@@ -165,7 +176,7 @@ export default function EnergySurvey({ onComplete, onSkip = null, existingSurvey
             <p className="text-red-400 text-sm mt-1">{errors.electricity_rate}</p>
           )}
           <p className="text-slate-500 text-xs mt-1">
-            Auto-filled based on state average. You can adjust based on your utility bill.
+            Auto-filled based on provincial average. You can adjust based on your utility bill.
           </p>
         </div>
 
