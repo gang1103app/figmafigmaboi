@@ -20,14 +20,46 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
   : ['http://localhost:5173'];
 
+// Helper function to check if origin is allowed
+const isOriginAllowed = (origin) => {
+  // Check exact match first
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+  
+  // If FRONTEND_URL is not set and we're in production, allow Render.com domains
+  // from the same project (ecobuddy)
+  // This provides a fallback for deployments where FRONTEND_URL might not be configured
+  if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
+    try {
+      const originUrl = new URL(origin);
+      // Allow ecobuddy-*.onrender.com domains for the same project
+      // This is more secure than allowing all .onrender.com domains
+      const hostname = originUrl.hostname;
+      if (hostname.endsWith('.onrender.com') && hostname.startsWith('ecobuddy-')) {
+        console.log(`⚠️  CORS: Allowing EcoBuddy Render.com domain: ${origin} (FRONTEND_URL not set)`);
+        console.log(`   💡 Tip: Set FRONTEND_URL environment variable to: ${origin}`);
+        return true;
+      }
+    } catch (e) {
+      // Invalid URL, will be rejected below
+    }
+  }
+  
+  return false;
+};
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
+      console.error(`❌ CORS: Rejected origin: ${origin}`);
+      console.error(`   Allowed origins: ${allowedOrigins.join(', ')}`);
+      console.error(`   Tip: Set FRONTEND_URL environment variable to include: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
