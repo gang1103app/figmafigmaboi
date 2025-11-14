@@ -218,13 +218,17 @@ Response:
 | `JWT_SECRET` | Secret key for JWT signing | Yes | - |
 | `NODE_ENV` | Environment (development/production) | No | development |
 | `PORT` | Server port | No | 3001 |
-| `FRONTEND_URL` | Frontend URL for CORS | No | * |
+| `FRONTEND_URL` | Frontend URL(s) for CORS (comma-separated) | No | localhost:5173 (dev), ecobuddy-*.onrender.com (prod fallback) |
+
+**Note on CORS**: In production, if `FRONTEND_URL` is not set, the API will automatically allow requests from `ecobuddy-*.onrender.com` domains as a fallback. For better security, always set `FRONTEND_URL` explicitly to your frontend URL(s).
 
 ## Security
 
 - Passwords are hashed using bcrypt with salt rounds of 10
 - JWT tokens expire after 7 days
-- CORS is configured to only allow requests from the frontend URL
+- CORS is configured to only allow requests from the frontend URL(s)
+  - In production without `FRONTEND_URL` set, allows `ecobuddy-*.onrender.com` domains
+  - For maximum security, explicitly set `FRONTEND_URL` environment variable
 - SQL injection protection via parameterized queries
 - Input validation on all endpoints using express-validator
 
