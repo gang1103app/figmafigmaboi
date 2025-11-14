@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
 export default function Social() {
-  const { user } = useAuth()
+  const { user, loading: userLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('leaderboard')
   const [friends, setFriends] = useState([])
   const [leaderboard, setLeaderboard] = useState([])
@@ -11,10 +11,13 @@ export default function Social() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    loadData()
-  }, [activeTab])
+    if (user) {
+      loadData()
+    }
+  }, [activeTab, user])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,7 +32,10 @@ export default function Social() {
   }, [searchQuery])
 
   const loadData = async () => {
+    if (!user) return
+    
     setLoading(true)
+    setError(null)
     try {
       if (activeTab === 'friends') {
         const response = await api.getFriends()
@@ -40,6 +46,7 @@ export default function Social() {
       }
     } catch (error) {
       console.error('Failed to load data:', error)
+      setError(error.message || 'Failed to load data')
     } finally {
       setLoading(false)
     }
@@ -71,7 +78,16 @@ export default function Social() {
     }
   }
 
-  if (!user) return null
+  // Show loading state while user is being loaded
+  if (userLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl">Loading...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
@@ -115,6 +131,19 @@ export default function Social() {
             Add Friends
           </button>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400">
+            <p className="font-medium">Error loading data</p>
+            <p className="text-sm mt-1">{error}</p>
+            <button 
+              onClick={loadData}
+              className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-sm transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
 
         {loading && activeTab !== 'add' && (
           <div className="text-center py-12 text-slate-400">

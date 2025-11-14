@@ -436,30 +436,6 @@ router.get('/leaderboard/friends', async (req, res) => {
     const result = await pool.query(
       `SELECT u.id, u.name, u.username, up.level, up.seeds, up.streak,
               ue.accessories, ue.mood,
-              (SELECT COUNT(*) FROM user_challenges uc WHERE uc.user_id = u.id AND uc.status = 'completed') as completed_tasks
-       FROM users u
-       JOIN user_progress up ON u.id = up.user_id
-       JOIN user_ecobuddy ue ON u.id = ue.user_id
-       WHERE u.id = $1 OR u.id IN (
-         SELECT friend_id FROM user_friends WHERE user_id = $1 AND status = 'accepted'
-       )
-       ORDER BY completed_tasks DESC, up.seeds DESC
-       LIMIT 50`,
-      [req.user.userId]
-    );
-    res.json({ leaderboard: result.rows });
-  } catch (error) {
-    console.error('Get friends leaderboard error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get leaderboard with friends
-router.get('/leaderboard/friends', async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT u.id, u.name, u.username, up.level, up.seeds, up.streak,
-              ue.accessories, ue.mood,
               (SELECT COUNT(*) FROM user_challenges uc WHERE uc.user_id = u.id AND uc.status = 'completed') as completed_tasks,
               COALESCE((SELECT tasks_completed FROM user_daily_progress WHERE user_id = u.id AND date = CURRENT_DATE), 0) as daily_progress
        FROM users u
