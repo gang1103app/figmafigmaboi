@@ -14,12 +14,43 @@ export default function Social() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (user) {
-      loadData()
+    if (!user) return
+    
+    const loadData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        if (activeTab === 'friends') {
+          const response = await api.getFriends()
+          setFriends(response.friends || [])
+        } else if (activeTab === 'leaderboard') {
+          const response = await api.getFriendsLeaderboard()
+          setLeaderboard(response.leaderboard || [])
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error)
+        setError(error.message || 'Failed to load data')
+      } finally {
+        setLoading(false)
+      }
     }
+    
+    loadData()
   }, [activeTab, user])
 
   useEffect(() => {
+    const searchForUsers = async () => {
+      setSearching(true)
+      try {
+        const response = await api.searchUsers(searchQuery)
+        setSearchResults(response.users || [])
+      } catch (error) {
+        console.error('Search failed:', error)
+      } finally {
+        setSearching(false)
+      }
+    }
+    
     const timer = setTimeout(() => {
       if (searchQuery.length >= 2) {
         searchForUsers()
@@ -31,11 +62,29 @@ export default function Social() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const loadData = async () => {
-    if (!user) return
-    
-    setLoading(true)
+  const handleAddFriend = async (friendId) => {
+    try {
+      await api.addFriend(friendId)
+      // Reload friends list by refetching
+      if (activeTab === 'friends') {
+        const response = await api.getFriends()
+        setFriends(response.friends || [])
+      } else if (activeTab === 'leaderboard') {
+        const response = await api.getFriendsLeaderboard()
+        setLeaderboard(response.leaderboard || [])
+      }
+      // Clear search
+      setSearchQuery('')
+      setSearchResults([])
+    } catch (error) {
+      console.error('Failed to add friend:', error)
+      alert(error.message || 'Failed to add friend')
+    }
+  }
+
+  const retryLoad = async () => {
     setError(null)
+    setLoading(true)
     try {
       if (activeTab === 'friends') {
         const response = await api.getFriends()
@@ -49,32 +98,6 @@ export default function Social() {
       setError(error.message || 'Failed to load data')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const searchForUsers = async () => {
-    setSearching(true)
-    try {
-      const response = await api.searchUsers(searchQuery)
-      setSearchResults(response.users || [])
-    } catch (error) {
-      console.error('Search failed:', error)
-    } finally {
-      setSearching(false)
-    }
-  }
-
-  const handleAddFriend = async (friendId) => {
-    try {
-      await api.addFriend(friendId)
-      // Reload friends list
-      await loadData()
-      // Clear search
-      setSearchQuery('')
-      setSearchResults([])
-    } catch (error) {
-      console.error('Failed to add friend:', error)
-      alert(error.message || 'Failed to add friend')
     }
   }
 
@@ -137,7 +160,7 @@ export default function Social() {
             <p className="font-medium">Error loading data</p>
             <p className="text-sm mt-1">{error}</p>
             <button 
-              onClick={loadData}
+              onClick={retryLoad}
               className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-sm transition-colors"
             >
               Try Again
