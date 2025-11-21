@@ -21,11 +21,29 @@ export const createTables = async (exitOnComplete = true) => {
         username VARCHAR(50) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
+        plant_health INTEGER DEFAULT 3 CHECK (plant_health >= 0 AND plant_health <= 3),
+        last_watered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        consecutive_water_days INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('✅ Users table created');
+    
+    // Add plant health columns to existing users table (for backward compatibility)
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS plant_health INTEGER DEFAULT 3 CHECK (plant_health >= 0 AND plant_health <= 3)
+    `);
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS last_watered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    `);
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS consecutive_water_days INTEGER DEFAULT 0
+    `);
+    console.log('✅ Users table plant health columns verified');
     
     // User progress table
     await client.query(`
@@ -203,6 +221,7 @@ export const createTables = async (exitOnComplete = true) => {
       CREATE INDEX IF NOT EXISTS idx_user_challenges_user_id ON user_challenges(user_id);
       CREATE INDEX IF NOT EXISTS idx_energy_usage_user_date ON energy_usage(user_id, date);
       CREATE INDEX IF NOT EXISTS idx_user_daily_progress_user_date ON user_daily_progress(user_id, date);
+      CREATE INDEX IF NOT EXISTS idx_users_last_watered ON users(last_watered_at);
     `);
     console.log('✅ Database indexes created');
     
