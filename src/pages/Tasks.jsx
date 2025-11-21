@@ -2,23 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
-// Define simple tasks that users can complete
-const TASK_LIST = [
+// Define simple tasks that users can complete daily
+const REGULAR_TASKS = [
   { id: 1, title: 'Turn off 10 lights', icon: '💡', seeds: 100 },
   { id: 2, title: 'Bike to work', icon: '🚲', seeds: 150 },
   { id: 3, title: 'Unplug unused devices', icon: '🔌', seeds: 75 },
-  { id: 4, title: 'Use cold water for laundry', icon: '💧', seeds: 120 },
-  { id: 5, title: 'Air dry clothes instead of using dryer', icon: '👕', seeds: 100 },
-  { id: 6, title: 'Take a 5-minute shower', icon: '🚿', seeds: 80 },
-  { id: 7, title: 'Use a reusable water bottle', icon: '♻️', seeds: 50 },
-  { id: 8, title: 'Turn off computer when not in use', icon: '💻', seeds: 75 },
-  { id: 9, title: 'Use natural light instead of lamps', icon: '🌞', seeds: 100 },
-  { id: 10, title: 'Lower thermostat by 2 degrees', icon: '🌡️', seeds: 130 },
-  { id: 11, title: 'Carpool or use public transportation', icon: '🚌', seeds: 150 },
-  { id: 12, title: 'Use a power strip and turn it off', icon: '⚡', seeds: 80 },
-  { id: 13, title: 'Close curtains to keep heat in/out', icon: '🪟', seeds: 100 },
-  { id: 14, title: 'Run dishwasher only when full', icon: '🍽️', seeds: 110 },
-  { id: 15, title: 'Replace one bulb with LED', icon: '💡', seeds: 120 }
+  { id: 4, title: 'Use cold water for laundry', icon: '💧', seeds: 120 }
 ]
 
 // Bonus tasks that cycle when all main tasks are done
@@ -34,43 +23,39 @@ export default function Tasks() {
   const [completedTasks, setCompletedTasks] = useState(new Set())
   const [loading, setLoading] = useState(false)
   const [lastCompletedDate, setLastCompletedDate] = useState(null)
-  const [availableTasks, setAvailableTasks] = useState([])
 
-  // Check if we need to reset tasks for a new day
+  // Check if we need to reset tasks for a new day at midnight
   useEffect(() => {
     if (user) {
-      const today = new Date().toISOString().split('T')[0]
-      const lastDate = user.lastActivityDate || user.last_activity_date
-      
-      setLastCompletedDate(lastDate)
-      
-      // If it's a new day, reset completed tasks
-      if (lastDate && lastDate !== today) {
-        setCompletedTasks(new Set())
-        // Update user's last activity date
-        updateUser({ 
-          completedTaskIds: [],
-          last_activity_date: today
-        })
-      } else if (user?.completedTaskIds) {
-        setCompletedTasks(new Set(user.completedTaskIds))
+      const checkAndResetTasks = () => {
+        const today = new Date().toISOString().split('T')[0]
+        const lastDate = user.lastActivityDate || user.last_activity_date
+        
+        setLastCompletedDate(lastDate)
+        
+        // If it's a new day, reset all completed tasks
+        if (lastDate && lastDate !== today) {
+          setCompletedTasks(new Set())
+          // Update user's last activity date and clear completed tasks
+          updateUser({ 
+            completedTaskIds: [],
+            last_activity_date: today
+          })
+        } else if (user?.completedTaskIds) {
+          setCompletedTasks(new Set(user.completedTaskIds))
+        }
       }
+
+      checkAndResetTasks()
+      
+      // Set up midnight checker - check every minute if it's a new day
+      const midnightChecker = setInterval(() => {
+        checkAndResetTasks()
+      }, 60000) // Check every minute
+      
+      return () => clearInterval(midnightChecker)
     }
   }, [user?.id])
-
-  // Determine which tasks to show
-  useEffect(() => {
-    const mainTasksCompleted = TASK_LIST.every(task => completedTasks.has(task.id))
-    
-    if (mainTasksCompleted) {
-      // All main tasks done, show bonus tasks that haven't been completed yet
-      const availableBonusTasks = BONUS_TASKS.filter(task => !completedTasks.has(task.id))
-      setAvailableTasks([...TASK_LIST, ...availableBonusTasks])
-    } else {
-      // Show only main tasks
-      setAvailableTasks(TASK_LIST)
-    }
-  }, [completedTasks])
 
   const handleCompleteTask = async (task) => {
     if (completedTasks.has(task.id)) {
@@ -109,11 +94,24 @@ export default function Tasks() {
 
   if (!user) return null
 
-  const mainTasksCompleted = TASK_LIST.filter(task => completedTasks.has(task.id)).length
+  const regularTasksCompleted = REGULAR_TASKS.filter(task => completedTasks.has(task.id)).length
   const bonusTasksCompleted = BONUS_TASKS.filter(task => completedTasks.has(task.id)).length
-  const totalCompleted = mainTasksCompleted + bonusTasksCompleted
-  const allMainTasksDone = mainTasksCompleted === TASK_LIST.length
-  const totalSeeds = [...TASK_LIST, ...BONUS_TASKS]
+  const totalCompleted = regularTasksCompleted + bonusTasksCompleted
+  const allRegularTasksDone = regularTasksCompleted === REGULAR_TASKS.length
+  
+  // When all bonus tasks are complete, reset them immediately so they can be done again
+  const allBonusTasksDone = bonusTasksCompleted === BONUS_TASKS.length
+  if (allRegularTasksDone && allBonusTasksDone && completedTasks.size > REGULAR_TASKS.length) {
+    // Remove bonus task IDs from completed tasks to allow re-doing them
+    const newCompletedTasks = new Set(
+      Array.from(completedTasks).filter(id => id <= REGULAR_TASKS.length)
+    )
+    setCompletedTasks(newCompletedTasks)
+    // Update backend
+    updateUser({ completedTaskIds: Array.from(newCompletedTasks) })
+  }
+  
+  const totalSeeds = [...REGULAR_TASKS, ...BONUS_TASKS]
     .filter(task => completedTasks.has(task.id))
     .reduce((sum, task) => sum + task.seeds, 0)
 
@@ -135,8 +133,8 @@ export default function Tasks() {
           </div>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 text-center">
             <div className="text-2xl mb-1">📋</div>
-            <div className="text-2xl font-bold text-white">{mainTasksCompleted}/{TASK_LIST.length}</div>
-            <div className="text-xs text-slate-400">Main Tasks</div>
+            <div className="text-2xl font-bold text-white">{regularTasksCompleted}/{REGULAR_TASKS.length}</div>
+            <div className="text-xs text-slate-400">Regular Tasks</div>
           </div>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 text-center">
             <div className="text-2xl mb-1">🌱</div>
@@ -146,14 +144,14 @@ export default function Tasks() {
         </div>
 
         {/* Bonus Tasks Info Banner */}
-        {allMainTasksDone && (
+        {allRegularTasksDone && (
           <div className="mb-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4">
             <div className="flex items-center gap-3">
               <div className="text-3xl">🎁</div>
               <div className="flex-1">
                 <h3 className="font-semibold text-white mb-1">Bonus Tasks Unlocked!</h3>
                 <p className="text-sm text-slate-300">
-                  You've completed all main tasks! Here are {BONUS_TASKS.length} bonus tasks that cycle daily.
+                  You've completed all regular tasks! Complete all {BONUS_TASKS.length} bonus tasks to cycle them and keep earning more seeds!
                   {bonusTasksCompleted > 0 && ` (${bonusTasksCompleted}/${BONUS_TASKS.length} bonus completed)`}
                 </p>
               </div>
@@ -163,15 +161,15 @@ export default function Tasks() {
 
         {/* Tasks List */}
         <div className="space-y-3">
-          {/* Main Tasks Section */}
+          {/* Regular Tasks Section */}
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
               <span>📋</span>
-              <span>Daily Tasks</span>
-              {allMainTasksDone && <span className="text-green-400 text-sm">(All Complete!)</span>}
+              <span>Regular Tasks</span>
+              {allRegularTasksDone && <span className="text-green-400 text-sm">(All Complete!)</span>}
             </h2>
             <div className="space-y-3">
-              {TASK_LIST.map(task => {
+              {REGULAR_TASKS.map(task => {
                 const isCompleted = completedTasks.has(task.id)
                 
                 return (
@@ -216,13 +214,13 @@ export default function Tasks() {
             </div>
           </div>
 
-          {/* Bonus Tasks Section - Only show when main tasks are done */}
-          {allMainTasksDone && (
+          {/* Bonus Tasks Section - Only show when regular tasks are done */}
+          {allRegularTasksDone && (
             <div className="mt-6">
               <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                 <span>🎁</span>
                 <span>Bonus Tasks</span>
-                <span className="text-purple-400 text-sm">(Extra rewards!)</span>
+                <span className="text-purple-400 text-sm">(Cycle when all complete!)</span>
               </h2>
               <div className="space-y-3">
                 {BONUS_TASKS.map(task => {
@@ -273,20 +271,19 @@ export default function Tasks() {
         </div>
 
         {/* Completion Messages */}
-        {allMainTasksDone && bonusTasksCompleted === 0 && (
+        {allRegularTasksDone && bonusTasksCompleted === 0 && (
           <div className="mt-6 bg-gradient-to-r from-green-500/20 to-brand-primary/20 border border-green-500/30 rounded-xl p-6 text-center">
             <div className="text-5xl mb-3">🎉</div>
-            <h2 className="text-2xl font-bold text-white mb-2">All Main Tasks Completed!</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">All Regular Tasks Completed!</h2>
             <p className="text-slate-300">Great job! You've earned seeds. Check out the bonus tasks above for more rewards!</p>
           </div>
         )}
         
-        {allMainTasksDone && bonusTasksCompleted === BONUS_TASKS.length && (
+        {allRegularTasksDone && bonusTasksCompleted === BONUS_TASKS.length && (
           <div className="mt-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-6 text-center">
             <div className="text-5xl mb-3">🏆</div>
-            <h2 className="text-2xl font-bold text-white mb-2">Perfect Day!</h2>
-            <p className="text-slate-300">Amazing! You've completed all tasks including bonuses! You've earned <span className="text-yellow-400 font-bold">{totalSeeds} seeds</span> total today!</p>
-            <p className="text-slate-400 text-sm mt-2">Come back tomorrow for fresh tasks!</p>
+            <h2 className="text-2xl font-bold text-white mb-2">All Bonus Tasks Complete!</h2>
+            <p className="text-slate-300">Amazing! Bonus tasks will reset now so you can keep earning more seeds!</p>
           </div>
         )}
       </div>
