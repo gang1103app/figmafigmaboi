@@ -648,6 +648,23 @@ router.post('/garden/purchase',
         });
       }
 
+      if (item.item_type === 'plant') {
+        // Check if user already owns 2 of this plant
+        const ownedCountResult = await client.query(
+          `SELECT COUNT(*) as count FROM user_garden 
+           WHERE user_id = $1 AND item_id = $2 AND is_active = true`,
+          [req.user.userId, itemId]
+        );
+        
+        const ownedCount = parseInt(ownedCountResult.rows[0].count);
+        if (ownedCount >= 2) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ 
+            error: 'You can only own up to 2 of each plant type'
+          });
+        }
+      }
+
       // Deduct seeds
       await client.query(
         'UPDATE user_progress SET seeds = seeds - $1 WHERE user_id = $2',
@@ -754,6 +771,157 @@ router.delete('/garden/plant/:plantId',
       res.json({ message: 'Plant removed from garden' });
     } catch (error) {
       console.error('Remove plant error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Water plants endpoint
+router.post('/garden/water',
+  writeLimiter,
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Get current user data
+      const userResult = await pool.query(
+        'SELECT plant_health, last_watered_at FROM users WHERE id = $1',
+        [userId]
+      );
+      
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const user = userResult.rows[0];
+      const now = new Date();
+      const lastWatered = user.last_watered_at ? new Date(user.last_watered_at) : null;
+      
+      // Check if already watered today
+      if (lastWatered) {
+        const lastWateredDate = new Date(lastWatered.toDateString());
+        const todayDate = new Date(now.toDateString());
+        
+        if (lastWateredDate.getTime() === todayDate.getTime()) {
+          return res.json({ 
+            message: 'Plants already watered today!',
+            plantHealth: user.plant_health,
+            lastWateredAt: user.last_watered_at,
+            alreadyWatered: true
+          });
+        }
+      }
+      
+      // Calculate plant health
+      let newPlantHealth = user.plant_health !== null ? user.plant_health : 3;
+      
+      // If watered consistently, regain health (1 bar per 3 days of consistent watering)
+      if (lastWatered && newPlantHealth < 3) {
+        const daysSinceLastWater = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
+        
+        // Only regain if watered within 1 day (consistent watering)
+        if (daysSinceLastWater <= 1) {
+          // Count consecutive watering days
+          // For simplicity, we'll just increment health slowly
+          // In a real implementation, we'd track consecutive days
+          newPlantHealth = Math.min(3, newPlantHealth + (1/3));
+        }
+      }
+      
+      // Update last watered timestamp and plant health
+      const updateResult = await pool.query(
+        `UPDATE users 
+         SET last_watered_at = CURRENT_TIMESTAMP, plant_health = $1
+         WHERE id = $2
+         RETURNING plant_health, last_watered_at`,
+        [newPlantHealth, userId]
+      );
+      
+      res.json({
+        message: 'Plants watered successfully! 💧',
+        plantHealth: updateResult.rows[0].plant_health,
+        lastWateredAt: updateResult.rows[0].last_watered_at
+      });
+    } catch (error) {
+      console.error('Water plants error:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// Check and update plant health based on watering schedule
+router.get('/garden/health-check',
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Get current user data and their plants
+      const userResult = await pool.query(
+        'SELECT plant_health, last_watered_at FROM users WHERE id = $1',
+        [userId]
+      );
+      
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const user = userResult.rows[0];
+      const now = new Date();
+      const lastWatered = user.last_watered_at ? new Date(user.last_watered_at) : null;
+      
+      let currentHealth = user.plant_health !== null ? user.plant_health : 3;
+      let healthChanged = false;
+      let plantsDeleted = false;
+      
+      // Calculate days since last watering
+      if (lastWatered) {
+        const daysSinceWatering = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
+        
+        // Lose 1 health bar per day not watered (max 3 days)
+        if (daysSinceWatering > 0 && daysSinceWatering <= 3) {
+          const healthLoss = Math.floor(daysSinceWatering);
+          const newHealth = Math.max(0, currentHealth - healthLoss);
+          
+          if (newHealth !== currentHealth) {
+            currentHealth = newHealth;
+            healthChanged = true;
+          }
+        } else if (daysSinceWatering >= 3) {
+          // Plants die after 3 days
+          currentHealth = 0;
+          healthChanged = true;
+        }
+      }
+      
+      // If health is 0, delete all plants
+      if (currentHealth === 0 && healthChanged) {
+        await pool.query(
+          'UPDATE user_garden SET is_active = false WHERE user_id = $1',
+          [userId]
+        );
+        
+        // Reset plant health to 3 after plants die
+        currentHealth = 3;
+        plantsDeleted = true;
+      }
+      
+      // Update health if changed
+      if (healthChanged) {
+        await pool.query(
+          'UPDATE users SET plant_health = $1 WHERE id = $2',
+          [currentHealth, userId]
+        );
+      }
+      
+      res.json({
+        plantHealth: currentHealth,
+        lastWateredAt: lastWatered,
+        healthChanged,
+        plantsDeleted,
+        message: plantsDeleted ? 'Your plants died! Water them regularly to keep them healthy.' : null
+      });
+    } catch (error) {
+      console.error('Health check error:', error);
       res.status(500).json({ error: 'Server error' });
     }
   }

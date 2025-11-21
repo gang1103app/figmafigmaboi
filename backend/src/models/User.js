@@ -34,6 +34,19 @@ class User {
         [user.id]
       );
       
+      // Set default free background (Chill Background)
+      const defaultBgResult = await client.query(
+        `SELECT id FROM garden_items WHERE name = 'Chill Background' AND item_type = 'background'`
+      );
+      
+      if (defaultBgResult.rows.length > 0) {
+        await client.query(
+          `INSERT INTO user_garden_background (user_id, background_id)
+           VALUES ($1, $2)`,
+          [user.id, defaultBgResult.rows[0].id]
+        );
+      }
+      
       await client.query('COMMIT');
       return user;
     } catch (error) {
@@ -69,7 +82,7 @@ class User {
     try {
       // Get user basic info
       const userResult = await client.query(
-        'SELECT id, email, username, name, created_at FROM users WHERE id = $1',
+        'SELECT id, email, username, name, created_at, plant_health, last_watered_at FROM users WHERE id = $1',
         [userId]
       );
       const user = userResult.rows[0];
@@ -135,6 +148,8 @@ class User {
         bestStreak: progress.best_streak,
         lastLoginDate: progress.last_login_date,
         completedTaskIds: progress.completed_task_ids || [],
+        plantHealth: user.plant_health !== null ? user.plant_health : 3,
+        lastWateredAt: user.last_watered_at,
         ecobuddy: {
           name: ecobuddy.name,
           level: ecobuddy.level,
