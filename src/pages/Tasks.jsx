@@ -7,7 +7,23 @@ const REGULAR_TASKS = [
   { id: 1, title: 'Turn off 10 lights', icon: '💡', seeds: 100 },
   { id: 2, title: 'Bike to work', icon: '🚲', seeds: 150 },
   { id: 3, title: 'Unplug unused devices', icon: '🔌', seeds: 75 },
-  { id: 4, title: 'Use cold water for laundry', icon: '💧', seeds: 120 }
+  { id: 4, title: 'Use cold water for laundry', icon: '💧', seeds: 120 },
+  { id: 5, title: 'Take shorter showers', icon: '🚿', seeds: 100 },
+  { id: 6, title: 'Use natural lighting during day', icon: '☀️', seeds: 80 },
+  { id: 7, title: 'Recycle paper and plastics', icon: '♻️', seeds: 90 },
+  { id: 8, title: 'Use a reusable water bottle', icon: '🧴', seeds: 70 },
+  { id: 9, title: 'Carpool or use public transit', icon: '🚌', seeds: 140 },
+  { id: 10, title: 'Use energy-efficient appliances', icon: '⚡', seeds: 110 },
+  { id: 11, title: 'Turn off the TV when not watching', icon: '📺', seeds: 85 },
+  { id: 12, title: 'Air dry clothes instead of using dryer', icon: '👕', seeds: 130 },
+  { id: 13, title: 'Use LED bulbs', icon: '💡', seeds: 95 },
+  { id: 14, title: 'Reduce AC/heating usage', icon: '🌡️', seeds: 125 },
+  { id: 15, title: 'Compost food waste', icon: '🗑️', seeds: 105 },
+  { id: 16, title: 'Bring reusable bags to grocery store', icon: '🛍️', seeds: 60 },
+  { id: 17, title: 'Fix leaky faucets', icon: '🚰', seeds: 115 },
+  { id: 18, title: 'Use a smart power strip', icon: '🔌', seeds: 100 },
+  { id: 19, title: 'Plant a tree or garden herbs', icon: '🌳', seeds: 150 },
+  { id: 20, title: 'Eat a plant-based meal', icon: '🥗', seeds: 90 }
 ]
 
 // Bonus tasks that cycle when all main tasks are done
@@ -23,6 +39,7 @@ export default function Tasks() {
   const [completedTasks, setCompletedTasks] = useState(new Set())
   const [loading, setLoading] = useState(false)
   const [lastCompletedDate, setLastCompletedDate] = useState(null)
+  const [bonusTasksCycled, setBonusTasksCycled] = useState(false)
 
   // Check if we need to reset tasks for a new day at midnight
   useEffect(() => {
@@ -36,6 +53,7 @@ export default function Tasks() {
         // If it's a new day, reset all completed tasks
         if (lastDate && lastDate !== today) {
           setCompletedTasks(new Set())
+          setBonusTasksCycled(false)
           // Update user's last activity date and clear completed tasks
           updateUser({ 
             completedTaskIds: [],
@@ -92,6 +110,35 @@ export default function Tasks() {
     }
   }
 
+  // Effect to handle bonus task cycling
+  useEffect(() => {
+    const regularTasksCompleted = REGULAR_TASKS.filter(task => completedTasks.has(task.id)).length
+    const bonusTasksCompleted = BONUS_TASKS.filter(task => completedTasks.has(task.id)).length
+    const allRegularTasksDone = regularTasksCompleted === REGULAR_TASKS.length
+    const allBonusTasksDone = bonusTasksCompleted === BONUS_TASKS.length
+
+    // When all bonus tasks are complete, reset them so they can be done again
+    // Seeds are already saved in user.seeds, so they won't be lost
+    if (allRegularTasksDone && allBonusTasksDone && !bonusTasksCycled) {
+      setBonusTasksCycled(true)
+      
+      // Remove bonus task IDs from completed tasks to allow re-doing them
+      const regularTaskIds = REGULAR_TASKS.map(t => t.id)
+      const newCompletedTasks = new Set(
+        Array.from(completedTasks).filter(id => regularTaskIds.includes(id))
+      )
+      setCompletedTasks(newCompletedTasks)
+      
+      // Update backend - NOTE: seeds are NOT modified here, they remain in user.seeds
+      updateUser({ completedTaskIds: Array.from(newCompletedTasks) })
+    }
+    
+    // Reset the cycled flag when bonus tasks are not all complete
+    if (!allBonusTasksDone && bonusTasksCycled) {
+      setBonusTasksCycled(false)
+    }
+  }, [completedTasks, bonusTasksCycled])
+
   if (!user) return null
 
   const regularTasksCompleted = REGULAR_TASKS.filter(task => completedTasks.has(task.id)).length
@@ -99,19 +146,7 @@ export default function Tasks() {
   const totalCompleted = regularTasksCompleted + bonusTasksCompleted
   const allRegularTasksDone = regularTasksCompleted === REGULAR_TASKS.length
   
-  // When all bonus tasks are complete, reset them immediately so they can be done again
-  const allBonusTasksDone = bonusTasksCompleted === BONUS_TASKS.length
-  if (allRegularTasksDone && allBonusTasksDone && completedTasks.size > REGULAR_TASKS.length) {
-    // Remove bonus task IDs from completed tasks to allow re-doing them
-    const regularTaskIds = REGULAR_TASKS.map(t => t.id)
-    const newCompletedTasks = new Set(
-      Array.from(completedTasks).filter(id => regularTaskIds.includes(id))
-    )
-    setCompletedTasks(newCompletedTasks)
-    // Update backend
-    updateUser({ completedTaskIds: Array.from(newCompletedTasks) })
-  }
-  
+  // Calculate seeds earned TODAY from currently completed tasks
   const totalSeeds = [...REGULAR_TASKS, ...BONUS_TASKS]
     .filter(task => completedTasks.has(task.id))
     .reduce((sum, task) => sum + task.seeds, 0)
