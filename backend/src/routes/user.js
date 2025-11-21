@@ -121,7 +121,7 @@ router.get('/challenges/available', async (req, res) => {
       SELECT c.*
       FROM challenges c
       WHERE c.id NOT IN (
-        SELECT challenge_id FROM user_challenges WHERE user_id = $1
+        SELECT challenge_id FROM user_challenges WHERE user_id = $1 AND status = 'active'
       )
       ORDER BY c.difficulty, c.points
     `, [req.user.userId]);
@@ -145,6 +145,7 @@ router.post('/challenges/:challengeId/start', writeLimiter, async (req, res) => 
     }
 
     // Add challenge to user's active challenges
+    // Allow multiple instances to support challenge cycling/repeating
     const result = await pool.query(`
       INSERT INTO user_challenges (user_id, challenge_id, status)
       VALUES ($1, $2, 'active')
@@ -154,9 +155,6 @@ router.post('/challenges/:challengeId/start', writeLimiter, async (req, res) => 
     res.json({ message: 'Challenge started', userChallenge: result.rows[0] });
   } catch (error) {
     console.error('Start challenge error:', error);
-    if (error.code === '23505') {
-      return res.status(400).json({ error: 'Challenge already started' });
-    }
     res.status(500).json({ error: 'Server error' });
   }
 });

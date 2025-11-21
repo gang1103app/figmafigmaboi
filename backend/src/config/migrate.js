@@ -112,8 +112,7 @@ export const createTables = async (exitOnComplete = true) => {
         started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        points_earned INTEGER DEFAULT 0,
-        UNIQUE(user_id, challenge_id)
+        points_earned INTEGER DEFAULT 0
       )
     `);
     console.log('✅ User challenges table created');
@@ -215,7 +214,21 @@ export const createTables = async (exitOnComplete = true) => {
         ('LED Upgrade', 'Replace 5 bulbs with LED', 'Easy', 75, 'lighting', 5, 30),
         ('Cold Wash Week', 'Use cold water for laundry for 7 days', 'Medium', 100, 'appliances', 7, 7),
         ('Shower Timer', 'Take 5-minute showers for a week', 'Medium', 120, 'water', 7, 7),
-        ('Zero Phantom Load', 'Eliminate all phantom power for 24 hours', 'Hard', 250, 'appliances', 1, 1)
+        ('Zero Phantom Load', 'Eliminate all phantom power for 24 hours', 'Hard', 250, 'appliances', 1, 1),
+        ('Screen Time Reduction', 'Reduce screen time by 1 hour daily for a week', 'Medium', 100, 'general', 7, 7),
+        ('Air Dry Dishes', 'Air dry dishes instead of using dishwasher heat dry', 'Easy', 60, 'appliances', 7, 7),
+        ('Power Strip Switch', 'Use power strips and turn them off when not in use', 'Easy', 50, 'appliances', 1, 7),
+        ('Window Insulation', 'Check and improve window insulation', 'Medium', 120, 'heating', 1, 14),
+        ('Fridge Temperature', 'Optimize fridge and freezer temperature settings', 'Easy', 40, 'appliances', 1, 1),
+        ('Eco-Mode Challenge', 'Use eco-mode on all appliances for a week', 'Easy', 70, 'appliances', 7, 7),
+        ('Laptop Power Saving', 'Enable power saving mode on computer devices', 'Easy', 45, 'appliances', 1, 1),
+        ('Smart Thermostat', 'Program thermostat with energy-saving schedule', 'Medium', 130, 'heating', 1, 14),
+        ('Ceiling Fan Usage', 'Use ceiling fans instead of AC when possible', 'Medium', 110, 'heating', 7, 7),
+        ('Microwave Over Oven', 'Use microwave instead of oven when possible', 'Easy', 55, 'appliances', 7, 7),
+        ('Dryer Lint Check', 'Clean dryer lint filter before each use', 'Easy', 35, 'appliances', 7, 7),
+        ('Energy Audit', 'Conduct a home energy audit and identify savings', 'Hard', 200, 'general', 1, 14),
+        ('Smart Lighting', 'Install smart bulbs and optimize lighting schedules', 'Medium', 140, 'lighting', 5, 21),
+        ('Weatherstripping', 'Install weatherstripping on doors and windows', 'Medium', 160, 'heating', 1, 14)
       ON CONFLICT DO NOTHING
     `);
     console.log('✅ Sample challenges inserted');
@@ -266,27 +279,30 @@ export const createTables = async (exitOnComplete = true) => {
     `);
     console.log('✅ Garden indexes created');
     
-    // Insert plant items
+    // Insert plant items - NEW ARTWORK FROM /public FOLDER
     await client.query(`
       INSERT INTO garden_items (name, item_type, image_path, cost_seeds, description) VALUES
-        ('Palm Tree', 'plant', '/39-394545_palm-tree-png-clipart-image-palm-trees-transparent-2093263324.png', 150, 'A beautiful tropical palm tree'),
-        ('Cactus', 'plant', '/cactus-png-cactus-png-transparent-image-1100-1477750922.png', 100, 'A hardy desert cactus'),
-        ('Cactus Pot', 'plant', '/cactus_PNG23623-404113307.png', 120, 'A potted cactus plant'),
-        ('Carnivorous Plant', 'plant', '/carnivorous-plants-png-67-qmcb1ttwx4r5ulry-2198993268.png', 200, 'An exotic carnivorous plant'),
-        ('Carnivorous Plant Art', 'plant', '/pngtree-carnivorous-plant-cartoon-art-png-image_15951972-1890845199.png', 180, 'Artistic carnivorous plant'),
-        ('Pine Tree', 'plant', '/Christmas-Pine-Tree-PNG-Photos-3027227939.png', 160, 'A festive pine tree'),
-        ('Pine Tree Classic', 'plant', '/pine-tree-clipart-transparent-background-free-free-png-2423192773.png', 140, 'Classic evergreen pine'),
-        ('Exotic Palm', 'plant', '/exotic-palm-trees-png-vpl1-fo5qdx8hg0eqmxk6-1167291046.png', 175, 'Exotic tropical palm'),
-        ('Desert Plants', 'plant', '/desert-rock-with-plants-free-png-3289328249.png', 130, 'Desert plants on rocks'),
-        ('Flower Bouquet', 'plant', '/bouquet_PNG56-2476668681.png', 110, 'Colorful flower bouquet'),
-        ('May Flowers', 'plant', '/1342515_may-flowers-png-2895071148.png', 125, 'Beautiful spring flowers'),
-        ('White Flowers', 'plant', '/impressive-vintage-3d-render-white-flowers-rock-plant-genuine-free-png-2178396743.png', 145, 'Elegant white flowers'),
-        ('Potted Plant', 'plant', '/pngtree-realistic-potted-plants-png-image_6697677-163290860.png', 105, 'Realistic potted plant'),
-        ('Pandanus Plant', 'plant', '/variegated-grass-pandanus-plant-in-white-round-contemporary-pot-container-isolated-on-transparent-background-for-garden-design-usage-free-png-3719357207.png', 135, 'Variegated pandanus plant'),
-        ('Watercolor Cactus', 'plant', '/watercolor-cactus-png-3-ppymtzapthddvpv3-2640896097.png', 115, 'Artistic watercolor cactus'),
-        ('Abstract Garden', 'background', '/backgrounds/994778ec1b5c816a8e4b7d57278e78e8-2671973825.jpg', 300, 'Abstract artistic garden background'),
-        ('Backyard', 'background', '/backgrounds/backyard-1270670421.jpg', 250, 'Cozy backyard setting'),
-        ('Sunset Garden', 'background', '/backgrounds/qAaqtuur2VRuaTSz2zTVhK-2487532322.jpg', 350, 'Beautiful sunset garden view')
+        ('Light Pink Tulip', 'plant', '/LightPinkTulip.png', 100, 'A delicate light pink tulip'),
+        ('Red Tulip', 'plant', '/RedTulip.png', 100, 'A vibrant red tulip'),
+        ('Yellow Tulip', 'plant', '/YellowTulip.png', 100, 'A cheerful yellow tulip'),
+        ('Purple Tulip', 'plant', '/PurpleTulip.png', 100, 'An elegant purple tulip'),
+        ('White Tulip', 'plant', '/WhiteTulip.png', 100, 'A pure white tulip'),
+        ('Pink Rose', 'plant', '/PinkRose.png', 120, 'A beautiful pink rose'),
+        ('Red Rose', 'plant', '/RedRose.png', 120, 'A classic red rose'),
+        ('Yellow Rose', 'plant', '/YellowRose.png', 120, 'A sunny yellow rose'),
+        ('Sunflower', 'plant', '/Sunflower.png', 150, 'A bright and cheerful sunflower'),
+        ('Daisy', 'plant', '/Daisy.png', 80, 'A simple and sweet daisy'),
+        ('Lavender', 'plant', '/Lavender.png', 110, 'Fragrant purple lavender'),
+        ('Marigold', 'plant', '/Marigold.png', 90, 'A vibrant orange marigold'),
+        ('Petunia', 'plant', '/Petunia.png', 95, 'A colorful petunia'),
+        ('Orchid', 'plant', '/Orchid.png', 180, 'An exotic and elegant orchid'),
+        ('Lily', 'plant', '/Lily.png', 140, 'A graceful white lily'),
+        ('Carnation', 'plant', '/Carnation.png', 85, 'A ruffled carnation flower'),
+        ('Hydrangea', 'plant', '/Hydrangea.png', 160, 'A lush hydrangea bloom'),
+        ('Poppy', 'plant', '/Poppy.png', 105, 'A delicate red poppy'),
+        ('Abstract Garden', 'background', '/backgrounds/AbstractGarden.jpg', 300, 'Abstract artistic garden background'),
+        ('Backyard', 'background', '/backgrounds/Backyard.jpg', 250, 'Cozy backyard setting'),
+        ('Sunset Garden', 'background', '/backgrounds/SunsetGarden.jpg', 350, 'Beautiful sunset garden view')
       ON CONFLICT DO NOTHING
     `);
     console.log('✅ Garden items inserted');
