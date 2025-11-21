@@ -82,7 +82,7 @@ class User {
     try {
       // Get user basic info
       const userResult = await client.query(
-        'SELECT id, email, username, name, created_at, plant_health, last_watered_at FROM users WHERE id = $1',
+        'SELECT id, email, username, name, created_at, plant_health, last_watered_at, consecutive_water_days FROM users WHERE id = $1',
         [userId]
       );
       const user = userResult.rows[0];

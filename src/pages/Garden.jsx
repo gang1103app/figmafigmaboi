@@ -301,7 +301,7 @@ export default function Garden() {
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  ⚠️ Water your plants daily! Each missed day reduces health by 1 bar. After 3 days without water, plants die. Consistent watering restores 1 bar per 3 days.
+                  ⚠️ Water your plants daily! Each missed day reduces health by 1 bar. Plants die on the 3rd day without water. Consistent watering restores 1 bar per 3 consecutive days.
                 </p>
               </div>
             </div>
@@ -432,7 +432,7 @@ export default function Garden() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {availableItems.plants.map(plant => {
                   const canAfford = userSeeds >= plant.cost_seeds
-                  const ownedCount = garden.plants.filter(p => p.item_id === plant.id && p.is_active).length
+                  const ownedCount = garden.plants.filter(p => p.item_id === plant.id).length
                   const canBuyMore = ownedCount < 2
                   const isGolden = plant.name.toLowerCase().includes('golden')
                   

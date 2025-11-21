@@ -785,7 +785,7 @@ router.post('/garden/water',
       
       // Get current user data
       const userResult = await pool.query(
-        'SELECT plant_health, last_watered_at FROM users WHERE id = $1',
+        'SELECT plant_health, last_watered_at, consecutive_water_days FROM users WHERE id = $1',
         [userId]
       );
       
@@ -812,29 +812,36 @@ router.post('/garden/water',
         }
       }
       
-      // Calculate plant health
+      // Calculate plant health and consecutive days
       let newPlantHealth = user.plant_health !== null ? user.plant_health : 3;
+      let consecutiveDays = user.consecutive_water_days || 0;
       
-      // If watered consistently, regain health (1 bar per 3 days of consistent watering)
-      if (lastWatered && newPlantHealth < 3) {
+      // Check if watering is consecutive (within 1 day)
+      if (lastWatered) {
         const daysSinceLastWater = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
         
-        // Only regain if watered within 1 day (consistent watering)
-        if (daysSinceLastWater <= 1) {
-          // Count consecutive watering days
-          // For simplicity, we'll just increment health slowly
-          // In a real implementation, we'd track consecutive days
-          newPlantHealth = Math.min(3, newPlantHealth + (1/3));
+        if (daysSinceLastWater === 1) {
+          // Consecutive watering - increment counter
+          consecutiveDays += 1;
+          
+          // Regain 1 health bar every 3 consecutive days of watering
+          if (consecutiveDays >= 3 && newPlantHealth < 3) {
+            newPlantHealth = Math.min(3, newPlantHealth + 1);
+            consecutiveDays = 0; // Reset counter after gaining health
+          }
+        } else if (daysSinceLastWater > 1) {
+          // Missed days - reset consecutive counter
+          consecutiveDays = 0;
         }
       }
       
-      // Update last watered timestamp and plant health
+      // Update last watered timestamp, plant health, and consecutive days
       const updateResult = await pool.query(
         `UPDATE users 
-         SET last_watered_at = CURRENT_TIMESTAMP, plant_health = $1
-         WHERE id = $2
+         SET last_watered_at = CURRENT_TIMESTAMP, plant_health = $1, consecutive_water_days = $2
+         WHERE id = $3
          RETURNING plant_health, last_watered_at`,
-        [newPlantHealth, userId]
+        [newPlantHealth, consecutiveDays, userId]
       );
       
       res.json({
@@ -878,8 +885,9 @@ router.get('/garden/health-check',
         const daysSinceWatering = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
         
         // Lose 1 health bar per day not watered
+        // Plants die on the 3rd day of not watering (when daysSinceWatering >= 3)
         if (daysSinceWatering >= 3) {
-          // Plants die after 3 days without watering
+          // Plants die on the 3rd day without watering
           currentHealth = 0;
           healthChanged = true;
         } else if (daysSinceWatering > 0) {
@@ -899,15 +907,18 @@ router.get('/garden/health-check',
           [userId]
         );
         
-        // Reset plant health to 3 after plants die
+        // Reset plant health to 3 and consecutive days after plants die
         currentHealth = 3;
         plantsDeleted = true;
-      }
-      
-      // Update health if changed
-      if (healthChanged) {
+        
         await pool.query(
-          'UPDATE users SET plant_health = $1 WHERE id = $2',
+          'UPDATE users SET plant_health = $1, consecutive_water_days = 0 WHERE id = $2',
+          [currentHealth, userId]
+        );
+      } else if (healthChanged) {
+        // Update health and reset consecutive days if health degraded
+        await pool.query(
+          'UPDATE users SET plant_health = $1, consecutive_water_days = 0 WHERE id = $2',
           [currentHealth, userId]
         );
       }
