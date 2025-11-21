@@ -7,7 +7,7 @@ export default function Garden() {
   const [garden, setGarden] = useState({ plants: [], background: null })
   const [availableItems, setAvailableItems] = useState({ plants: [], backgrounds: [] })
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('garden') // 'garden' or 'shop'
+  const [activeTab, setActiveTab] = useState('garden') // 'garden', 'shop-plants', or 'shop-backgrounds'
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
   const [draggedPlant, setDraggedPlant] = useState(null)
@@ -261,14 +261,24 @@ export default function Garden() {
             🏡 Garden
           </button>
           <button
-            onClick={() => setActiveTab('shop')}
+            onClick={() => setActiveTab('shop-plants')}
             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
-              activeTab === 'shop'
+              activeTab === 'shop-plants'
                 ? 'bg-brand-primary text-white'
                 : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800'
             }`}
           >
-            🛒 Shop
+            🌿 Shop Plants
+          </button>
+          <button
+            onClick={() => setActiveTab('shop-backgrounds')}
+            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+              activeTab === 'shop-backgrounds'
+                ? 'bg-brand-primary text-white'
+                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800'
+            }`}
+          >
+            🖼️ Shop Backgrounds
           </button>
         </div>
 
@@ -423,7 +433,7 @@ export default function Garden() {
         )}
 
         {/* Shop Tab */}
-        {activeTab === 'shop' && (
+        {activeTab === 'shop-plants' && (
           <div className="space-y-6">
             {/* Plants Shop */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
@@ -492,7 +502,12 @@ export default function Garden() {
                 })}
               </div>
             </div>
+          </div>
+        )}
 
+        {/* Shop Backgrounds Tab */}
+        {activeTab === 'shop-backgrounds' && (
+          <div className="space-y-6">
             {/* Backgrounds Shop */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
               <h2 className="text-xl font-semibold mb-4">🖼️ Backgrounds</h2>
