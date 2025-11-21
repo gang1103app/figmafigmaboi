@@ -16,12 +16,12 @@ const REGULAR_TASKS = [
   { id: 10, title: 'Use energy-efficient appliances', icon: '⚡', seeds: 110 },
   { id: 11, title: 'Turn off the TV when not watching', icon: '📺', seeds: 85 },
   { id: 12, title: 'Air dry clothes instead of using dryer', icon: '👕', seeds: 130 },
-  { id: 13, title: 'Use LED bulbs', icon: '💡', seeds: 95 },
+  { id: 13, title: 'Use LED bulbs', icon: '🔦', seeds: 95 },
   { id: 14, title: 'Reduce AC/heating usage', icon: '🌡️', seeds: 125 },
   { id: 15, title: 'Compost food waste', icon: '🗑️', seeds: 105 },
   { id: 16, title: 'Bring reusable bags to grocery store', icon: '🛍️', seeds: 60 },
   { id: 17, title: 'Fix leaky faucets', icon: '🚰', seeds: 115 },
-  { id: 18, title: 'Use a smart power strip', icon: '🔌', seeds: 100 },
+  { id: 18, title: 'Use a smart power strip', icon: '🔋', seeds: 100 },
   { id: 19, title: 'Plant a tree or garden herbs', icon: '🌳', seeds: 150 },
   { id: 20, title: 'Eat a plant-based meal', icon: '🥗', seeds: 90 }
 ]
@@ -130,7 +130,14 @@ export default function Tasks() {
       setCompletedTasks(newCompletedTasks)
       
       // Update backend - NOTE: seeds are NOT modified here, they remain in user.seeds
-      updateUser({ completedTaskIds: Array.from(newCompletedTasks) })
+      // Use async IIFE to properly handle the promise
+      ;(async () => {
+        try {
+          await updateUser({ completedTaskIds: Array.from(newCompletedTasks) })
+        } catch (error) {
+          console.error('Failed to update completed tasks during bonus cycling:', error)
+        }
+      })()
     }
     
     // Reset the cycled flag when bonus tasks are not all complete
