@@ -57,20 +57,23 @@ export default function Analytics() {
       setSurvey(surveyResponse.survey)
       
       // Simulate task history - in production this would come from backend
-      // For now, we'll use user's completed tasks to simulate history
+      // For now, we'll use a deterministic pattern based on day of week for consistent demo
       const history = {}
       const today = new Date()
       
-      // Create 7 days of history
+      // Create 7 days of history with deterministic data
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today)
         date.setDate(date.getDate() - i)
         const dateStr = date.toISOString().split('T')[0]
         
-        // Simulate random task completions for demo (in production would be from DB)
+        // Use day index for deterministic demo data (0-4 tasks)
+        const dayOfWeek = date.getDay()
+        const tasksCount = Math.min(4, (dayOfWeek + i) % 5)
+        
         history[dateStr] = {
-          tasks: Math.floor(Math.random() * 5), // 0-4 tasks per day
-          completedTaskIds: [] // Would have actual task IDs
+          tasks: tasksCount,
+          completedTaskIds: [] // Would have actual task IDs in production
         }
       }
       

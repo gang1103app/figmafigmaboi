@@ -122,7 +122,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={handleRenameMascot}
-                  disabled={!newName.trim() || newName.trim().length === 0}
+                  disabled={!newName.trim()}
                   className="flex-1 px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save

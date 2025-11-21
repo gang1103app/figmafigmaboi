@@ -103,8 +103,9 @@ export default function Tasks() {
   const allBonusTasksDone = bonusTasksCompleted === BONUS_TASKS.length
   if (allRegularTasksDone && allBonusTasksDone && completedTasks.size > REGULAR_TASKS.length) {
     // Remove bonus task IDs from completed tasks to allow re-doing them
+    const regularTaskIds = REGULAR_TASKS.map(t => t.id)
     const newCompletedTasks = new Set(
-      Array.from(completedTasks).filter(id => id <= REGULAR_TASKS.length)
+      Array.from(completedTasks).filter(id => regularTaskIds.includes(id))
     )
     setCompletedTasks(newCompletedTasks)
     // Update backend
