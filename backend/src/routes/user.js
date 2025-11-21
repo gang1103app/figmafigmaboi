@@ -877,19 +877,18 @@ router.get('/garden/health-check',
       if (lastWatered) {
         const daysSinceWatering = Math.floor((now - lastWatered) / (1000 * 60 * 60 * 24));
         
-        // Lose 1 health bar per day not watered (max 3 days)
-        if (daysSinceWatering > 0 && daysSinceWatering <= 3) {
-          const healthLoss = Math.floor(daysSinceWatering);
-          const newHealth = Math.max(0, currentHealth - healthLoss);
+        // Lose 1 health bar per day not watered
+        if (daysSinceWatering >= 3) {
+          // Plants die after 3 days without watering
+          currentHealth = 0;
+          healthChanged = true;
+        } else if (daysSinceWatering > 0) {
+          const newHealth = Math.max(0, 3 - daysSinceWatering);
           
           if (newHealth !== currentHealth) {
             currentHealth = newHealth;
             healthChanged = true;
           }
-        } else if (daysSinceWatering >= 3) {
-          // Plants die after 3 days
-          currentHealth = 0;
-          healthChanged = true;
         }
       }
       
