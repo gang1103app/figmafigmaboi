@@ -242,6 +242,16 @@ class ApiService {
     });
   }
 
+  async waterPlants() {
+    return await this.request('/user/garden/water', {
+      method: 'POST'
+    });
+  }
+
+  async checkPlantHealth() {
+    return await this.request('/user/garden/health-check');
+  }
+
   async getFriendGarden(friendId) {
     return await this.request(`/user/friends/${friendId}/garden`);
   }
