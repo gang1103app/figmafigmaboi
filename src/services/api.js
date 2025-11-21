@@ -241,6 +241,10 @@ class ApiService {
       method: 'DELETE'
     });
   }
+
+  async getFriendGarden(friendId) {
+    return await this.request(`/user/friends/${friendId}/garden`);
+  }
 }
 
 export default new ApiService();

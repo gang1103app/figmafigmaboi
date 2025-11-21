@@ -2,30 +2,49 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import KpiCard from '../components/KpiCard'
-import ChartLine from '../components/ChartLine'
-import ChartPie from '../components/ChartPie'
+import { Line } from 'react-chartjs-2'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js'
 
-// CO2 emissions per kWh by state (kg CO2/kWh)
-const STATE_CO2_RATES = {
-  'AL': 0.451, 'AK': 0.461, 'AZ': 0.431, 'AR': 0.524, 'CA': 0.209,
-  'CO': 0.731, 'CT': 0.236, 'DE': 0.418, 'FL': 0.398, 'GA': 0.466,
-  'HI': 0.712, 'ID': 0.059, 'IL': 0.427, 'IN': 0.884, 'IA': 0.731,
-  'KS': 0.698, 'KY': 0.919, 'LA': 0.549, 'ME': 0.154, 'MD': 0.511,
-  'MA': 0.401, 'MI': 0.603, 'MN': 0.512, 'MS': 0.513, 'MO': 0.853,
-  'MT': 0.698, 'NE': 0.718, 'NV': 0.547, 'NH': 0.154, 'NJ': 0.298,
-  'NM': 0.748, 'NY': 0.251, 'NC': 0.434, 'ND': 0.898, 'OH': 0.723,
-  'OK': 0.636, 'OR': 0.186, 'PA': 0.462, 'RI': 0.401, 'SC': 0.316,
-  'SD': 0.431, 'TN': 0.482, 'TX': 0.499, 'UT': 0.798, 'VT': 0.003,
-  'VA': 0.417, 'WA': 0.150, 'WV': 0.950, 'WI': 0.671, 'WY': 0.904
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+)
+
+// Task energy savings data (in kWh per completion)
+const TASK_ENERGY_SAVINGS = {
+  1: 0.5,   // Turn off 10 lights - 50W * 10 * 1 hour = 0.5 kWh
+  2: 2.0,   // Bike to work - saves ~2 kWh in car fuel equivalent
+  3: 0.3,   // Unplug unused devices - phantom draw 30W * 10 hours = 0.3 kWh
+  4: 1.5,   // Cold water laundry - heating element savings ~1.5 kWh
+  101: 1.8, // Walk instead of drive - car fuel equivalent
+  102: 2.5, // Programmable thermostat - daily savings
+  103: 0.8, // Hand wash dishes - dishwasher uses ~1.8 kWh, hand wash ~1 kWh
+  104: 0.2  // Reusable bags - small manufacturing/transport energy offset
 }
 
 export default function Analytics() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [energyData, setEnergyData] = useState([])
-  const [loading, setLoading] = useState(true)
   const [survey, setSurvey] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [taskHistory, setTaskHistory] = useState({})
 
   useEffect(() => {
     loadData()
@@ -37,12 +56,28 @@ export default function Analytics() {
       const surveyResponse = await api.getSurvey()
       setSurvey(surveyResponse.survey)
       
-      // Get last 7 days of data
-      const endDate = new Date().toISOString().split('T')[0]
-      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      // Simulate task history - in production this would come from backend
+      // For now, we'll use a deterministic pattern based on day of week for consistent demo
+      const history = {}
+      const today = new Date()
       
-      const response = await api.getEnergyUsage(startDate, endDate)
-      setEnergyData(response.energyUsage || [])
+      // Create 7 days of history with deterministic data
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today)
+        date.setDate(date.getDate() - i)
+        const dateStr = date.toISOString().split('T')[0]
+        
+        // Use day index for deterministic demo data (0-4 tasks)
+        const dayOfWeek = date.getDay()
+        const tasksCount = Math.min(4, (dayOfWeek + i) % 5)
+        
+        history[dateStr] = {
+          tasks: tasksCount,
+          completedTaskIds: [] // Would have actual task IDs in production
+        }
+      }
+      
+      setTaskHistory(history)
     } catch (error) {
       console.error('Failed to load data:', error)
     } finally {
@@ -52,53 +87,105 @@ export default function Analytics() {
 
   if (!user) return null
 
-  // Calculate total kWh saved from completed challenges
-  const completedChallenges = user.challenges?.filter(c => c.status === 'completed') || []
-  const estimatedKwhSaved = completedChallenges.length * 5 // Estimate 5 kWh per challenge
-
-  // Calculate real savings based on survey data
-  const electricityRate = survey?.electricity_rate || 0.13 // Default to national average
-  const totalSavings = (estimatedKwhSaved * electricityRate).toFixed(2)
-  
-  // Calculate CO2 saved based on state
-  const co2Rate = survey?.state_code ? STATE_CO2_RATES[survey.state_code] || 0.42 : 0.42 // Default to national average
-  const co2Saved = (estimatedKwhSaved * co2Rate).toFixed(1)
-  
-  // Process energy data for charts
+  // Prepare data for last 7 days
   const last7Days = []
+  const today = new Date()
   for (let i = 6; i >= 0; i--) {
-    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
-    last7Days.push(date.toISOString().split('T')[0])
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    last7Days.push(date)
   }
 
-  const weeklyData = last7Days.map(date => {
-    const dayData = energyData.filter(d => d.date === date)
-    return dayData.reduce((sum, d) => sum + parseFloat(d.usage_kwh || 0), 0)
+  const weeklyLabels = last7Days.map(date => 
+    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+  )
+
+  // Tasks completed data
+  const tasksCompletedData = last7Days.map(date => {
+    const dateStr = date.toISOString().split('T')[0]
+    return taskHistory[dateStr]?.tasks || 0
   })
 
-  const weeklyLabels = last7Days.map(date => {
-    const d = new Date(date)
-    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
-  })
+  // Energy savings data (only if survey is complete)
+  const energySavingsData = survey ? last7Days.map(date => {
+    const dateStr = date.toISOString().split('T')[0]
+    const tasksCompleted = taskHistory[dateStr]?.completedTaskIds || []
+    
+    // Calculate total kWh saved that day
+    const kWhSaved = tasksCompleted.reduce((sum, taskId) => {
+      return sum + (TASK_ENERGY_SAVINGS[taskId] || 0)
+    }, 0)
+    
+    // Convert to dollars based on electricity rate
+    const electricityRate = survey.electricity_rate || 0.13
+    return (kWhSaved * electricityRate).toFixed(2)
+  }) : []
 
-  // Calculate usage by category
-  const categories = ['heating', 'cooling', 'lighting', 'appliances', 'other']
-  const categoryData = categories.map(cat => {
-    const catData = energyData.filter(d => d.category === cat)
-    return catData.reduce((sum, d) => sum + parseFloat(d.usage_kwh || 0), 0)
-  })
+  // Chart configuration for tasks completed
+  const tasksChartData = {
+    labels: weeklyLabels,
+    datasets: [
+      {
+        label: 'Tasks Completed',
+        data: tasksCompletedData,
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  }
 
-  const categoryLabels = ['Heating', 'Cooling', 'Lighting', 'Appliances', 'Other']
+  // Chart configuration for energy savings
+  const energyChartData = {
+    labels: weeklyLabels,
+    datasets: [
+      {
+        label: 'Money Saved ($)',
+        data: energySavingsData,
+        borderColor: 'rgb(250, 204, 21)',
+        backgroundColor: 'rgba(250, 204, 21, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  }
 
-  const todayUsage = weeklyData[6] || 0
-  const yesterdayUsage = weeklyData[5] || 0
-  const averageDaily = weeklyData.length > 0 
-    ? (weeklyData.reduce((sum, val) => sum + val, 0) / weeklyData.length).toFixed(1)
-    : 0
-
-  const trend = yesterdayUsage > 0
-    ? ((todayUsage - yesterdayUsage) / yesterdayUsage * 100).toFixed(0)
-    : 0
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+        titleColor: '#fff',
+        bodyColor: '#cbd5e1',
+        borderColor: '#475569',
+        borderWidth: 1
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(71, 85, 105, 0.3)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      },
+      x: {
+        grid: {
+          color: 'rgba(71, 85, 105, 0.3)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
@@ -106,120 +193,76 @@ export default function Analytics() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Analytics</h1>
-          <p className="text-slate-400">Track your energy consumption and savings</p>
+          <p className="text-slate-400">Track your progress and energy savings</p>
         </div>
 
-        {/* Survey Prompt */}
-        {!survey && (
-          <div className="bg-brand-primary/20 border border-brand-primary/50 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-white mb-1">Complete Your Energy Profile</h3>
-                <p className="text-sm text-slate-300">
-                  Get accurate energy savings calculations based on your location and electricity rates
-                </p>
-              </div>
-              <button
-                onClick={() => navigate('/settings')}
-                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ml-4"
-              >
-                Complete Survey
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* KPI Cards */}
+        {/* Seeds and Streaks Display */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <KpiCard
-            icon="⚡"
-            title="Est. kWh Saved"
-            value={estimatedKwhSaved.toFixed(0)}
-            unit="kWh"
-          />
-          <KpiCard
-            icon="💰"
-            title="Money Saved"
-            value={`$${totalSavings}`}
-            unit={survey ? 'calculated' : 'estimate'}
-          />
-          <KpiCard
-            icon="🌱"
-            title="CO₂ Avoided"
-            value={co2Saved}
-            unit="kg"
-          />
-          <KpiCard
-            icon="📊"
-            title="Tasks Done"
-            value={completedChallenges.length}
-            unit="total"
-          />
-        </div>
-
-        {survey && (
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 mb-6">
-            <div className="text-sm text-slate-400">
-              <span className="text-brand-primary font-semibold">Calculations based on:</span>
-              {' '}{survey.location}, {survey.state_code} • 
-              ${survey.electricity_rate}/kWh • 
-              {STATE_CO2_RATES[survey.state_code]?.toFixed(3) || '0.420'} kg CO₂/kWh
+          <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 backdrop-blur-sm rounded-xl p-6 border border-yellow-500/30">
+            <div className="text-4xl mb-2 text-center">🌱</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-yellow-400 mb-1">{user.seeds || 0}</div>
+              <div className="text-slate-300 font-semibold">Seeds</div>
+              <div className="text-xs text-slate-400 mt-1">Total earned</div>
             </div>
           </div>
-        )}
+          <div className="bg-gradient-to-br from-orange-500/20 to-red-600/10 backdrop-blur-sm rounded-xl p-6 border border-orange-500/30">
+            <div className="text-4xl mb-2 text-center">🔥</div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-400 mb-1">{user.streak || 0}</div>
+              <div className="text-slate-300 font-semibold">Day Streak</div>
+              <div className="text-xs text-slate-400 mt-1">Keep it going!</div>
+            </div>
+          </div>
+        </div>
 
-        {/* Weekly Usage Chart */}
+        {/* Tasks Completed Graph */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Weekly Energy Usage</h2>
-          {weeklyData.some(val => val > 0) ? (
-            <div className="h-64">
-              <ChartLine data={weeklyData} labels={weeklyLabels} />
-            </div>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <span>📊</span>
+            <span>Tasks Completed (Last 7 Days)</span>
+          </h2>
+          <div className="h-64">
+            <Line data={tasksChartData} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Energy Saved Graph */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 mb-6">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <span>💰</span>
+            <span>Energy Saved Per Day (Last 7 Days)</span>
+          </h2>
+          {survey ? (
+            <>
+              <div className="h-64">
+                <Line data={energyChartData} options={chartOptions} />
+              </div>
+              <div className="mt-4 text-sm text-slate-400 bg-slate-900/50 rounded-lg p-3">
+                <span className="text-brand-primary font-semibold">Calculations based on:</span>
+                {' '}{survey.location}, {survey.state_code} • ${survey.electricity_rate}/kWh
+                <div className="mt-1 text-xs">
+                  Energy savings calculated from task-specific reductions in electricity usage
+                </div>
+              </div>
+            </>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-400">
+            <div className="h-64 flex items-center justify-center bg-slate-900/30 rounded-lg">
               <div className="text-center">
-                <div className="text-4xl mb-2">📊</div>
-                <p>No energy usage data yet</p>
-                <p className="text-sm mt-1">Complete tasks to start tracking your progress!</p>
+                <div className="text-5xl mb-3">📋</div>
+                <p className="text-lg font-semibold text-white mb-2">Complete survey to see graph</p>
+                <p className="text-sm text-slate-400 mb-4">
+                  We need your location and electricity rate to calculate accurate energy savings
+                </p>
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="px-6 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg font-medium transition-colors"
+                >
+                  Complete Survey
+                </button>
               </div>
             </div>
           )}
-        </div>
-
-        {/* Usage by Category */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
-          <h2 className="text-xl font-semibold mb-4">Usage by Category</h2>
-          {categoryData.some(val => val > 0) ? (
-            <div className="h-72">
-              <ChartPie data={categoryData} labels={categoryLabels} />
-            </div>
-          ) : (
-            <div className="h-72 flex items-center justify-center text-slate-400">
-              <div className="text-center">
-                <div className="text-4xl mb-2">📈</div>
-                <p>No category breakdown available</p>
-                <p className="text-sm mt-1">Start completing tasks to see detailed analytics!</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-1">Total Tasks</div>
-            <div className="text-2xl font-bold text-white">
-              {completedChallenges.length}
-            </div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-1">Current Streak</div>
-            <div className="text-2xl font-bold text-orange-400">🔥 {user.streak || 0} days</div>
-          </div>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-1">Seeds Earned</div>
-            <div className="text-2xl font-bold text-yellow-400">🌱 {user.seeds || 0}</div>
-          </div>
         </div>
       </div>
     </div>

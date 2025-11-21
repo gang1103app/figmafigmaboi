@@ -16,6 +16,7 @@ export default function Settings() {
   const [notificationPermission, setNotificationPermission] = useState('default')
   const [testingNotification, setTestingNotification] = useState(false)
   const [testing10sNotification, setTesting10sNotification] = useState(false)
+  const [showPrivacyPopup, setShowPrivacyPopup] = useState(false)
 
   useEffect(() => {
     loadSurvey()
@@ -122,6 +123,25 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
       <div className="container max-w-5xl mx-auto px-4 py-6">
+        {/* Privacy Popup */}
+        {showPrivacyPopup && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+            <div className="bg-slate-800 rounded-xl p-6 max-w-md w-full border border-slate-700">
+              <h3 className="text-xl font-bold mb-4 text-white">Privacy Information</h3>
+              <p className="text-slate-300 mb-6">
+                Your information is used to calculate potential energy savings and give you personalized tips. 
+                Your information is never given to any third parties and remains on our servers.
+              </p>
+              <button
+                onClick={() => setShowPrivacyPopup(false)}
+                className="w-full px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
@@ -341,69 +361,18 @@ export default function Settings() {
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">Privacy</h2>
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
-            <button className="w-full p-4 border-b border-slate-700/50 text-left hover:bg-slate-700/30 transition-colors">
+            <button 
+              onClick={() => setShowPrivacyPopup(true)}
+              className="w-full p-4 text-left hover:bg-slate-700/30 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-white">Profile Visibility</div>
-                  <div className="text-sm text-slate-400">Public</div>
+                  <div className="font-medium text-white">Privacy Information</div>
+                  <div className="text-sm text-slate-400">Learn how we use your data</div>
                 </div>
                 <span className="text-slate-400">→</span>
               </div>
             </button>
-
-            <button className="w-full p-4 border-b border-slate-700/50 text-left hover:bg-slate-700/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-white">Activity Sharing</div>
-                  <div className="text-sm text-slate-400">Friends only</div>
-                </div>
-                <span className="text-slate-400">→</span>
-              </div>
-            </button>
-
-            <button className="w-full p-4 text-left hover:bg-slate-700/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-white">Data & Privacy</div>
-                  <div className="text-sm text-slate-400">Manage your data</div>
-                </div>
-                <span className="text-slate-400">→</span>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* About Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">About</h2>
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
-            <button className="w-full p-4 border-b border-slate-700/50 text-left hover:bg-slate-700/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-white">Help & Support</div>
-                <span className="text-slate-400">→</span>
-              </div>
-            </button>
-
-            <button className="w-full p-4 border-b border-slate-700/50 text-left hover:bg-slate-700/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-white">Terms of Service</div>
-                <span className="text-slate-400">→</span>
-              </div>
-            </button>
-
-            <button className="w-full p-4 border-b border-slate-700/50 text-left hover:bg-slate-700/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-white">Privacy Policy</div>
-                <span className="text-slate-400">→</span>
-              </div>
-            </button>
-
-            <div className="p-4 text-left">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-white">Version</div>
-                <div className="text-sm text-slate-400">1.0.0</div>
-              </div>
-            </div>
           </div>
         </div>
 

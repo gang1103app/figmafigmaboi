@@ -7,6 +7,7 @@ export default function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('This Month')
+  const [sortBy, setSortBy] = useState('streak') // 'streak' or 'seeds'
 
   const timeFilters = ['This Week', 'This Month', 'All Time']
 
@@ -28,9 +29,18 @@ export default function Leaderboard() {
 
   if (!user) return null
 
+  // Sort leaderboard based on selected criteria
+  const sortedLeaderboard = [...leaderboardData].sort((a, b) => {
+    if (sortBy === 'streak') {
+      return (b.streak || 0) - (a.streak || 0)
+    } else {
+      return (b.seeds || 0) - (a.seeds || 0)
+    }
+  })
+
   // Find current user's rank
-  const userRank = leaderboardData.findIndex(u => u.id === user.id) + 1
-  const currentUser = leaderboardData.find(u => u.id === user.id)
+  const userRank = sortedLeaderboard.findIndex(u => u.id === user.id) + 1
+  const currentUser = sortedLeaderboard.find(u => u.id === user.id)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
@@ -42,7 +52,7 @@ export default function Leaderboard() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
           {timeFilters.map(filter => (
             <button
               key={filter}
@@ -58,6 +68,31 @@ export default function Leaderboard() {
           ))}
         </div>
 
+        {/* Sort Toggle */}
+        <div className="flex gap-2 mb-6">
+          <span className="text-sm text-slate-400 flex items-center mr-2">Sort by:</span>
+          <button
+            onClick={() => setSortBy('streak')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+              sortBy === 'streak'
+                ? 'bg-orange-500 text-white'
+                : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            🔥 Streaks
+          </button>
+          <button
+            onClick={() => setSortBy('seeds')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+              sortBy === 'seeds'
+                ? 'bg-yellow-500 text-white'
+                : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            🌱 Seeds
+          </button>
+        </div>
+
         {loading ? (
           <div className="text-center py-12 text-slate-400">
             <div className="text-xl">Loading...</div>
@@ -65,9 +100,9 @@ export default function Leaderboard() {
         ) : (
           <>
             {/* Top 3 Podium */}
-            {leaderboardData.length >= 3 && (
+            {sortedLeaderboard.length >= 3 && (
               <div className="grid grid-cols-3 gap-4 mb-6">
-                {leaderboardData.slice(0, 3).map((person, idx) => {
+                {sortedLeaderboard.slice(0, 3).map((person, idx) => {
                   const accessories = person.accessories ? JSON.parse(person.accessories) : []
                   const rank = idx + 1
                   
@@ -104,9 +139,13 @@ export default function Leaderboard() {
                       </div>
                       
                       <div className="font-semibold text-white mb-1">{person.name}</div>
-                      <div className="text-2xl font-bold text-brand-primary mb-1">{person.completed_tasks || 0}</div>
-                      <div className="text-xs text-slate-400">tasks completed</div>
-                      <div className="mt-2 text-xs text-slate-500">🔥 {person.streak || 0} days</div>
+                      <div className="text-2xl font-bold text-brand-primary mb-1">
+                        {sortBy === 'streak' ? `🔥 ${person.streak || 0}` : `🌱 ${person.seeds || 0}`}
+                      </div>
+                      <div className="text-xs text-slate-400">{sortBy === 'streak' ? 'day streak' : 'seeds'}</div>
+                      <div className="mt-2 text-xs text-slate-500">
+                        {sortBy === 'streak' ? `🌱 ${person.seeds || 0} seeds` : `🔥 ${person.streak || 0} days`}
+                      </div>
                       <div className="mt-1 text-xs text-green-400">Today: {person.daily_progress || 0} tasks</div>
                     </div>
                   )
@@ -116,14 +155,14 @@ export default function Leaderboard() {
 
             {/* Full Leaderboard List */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
-              {leaderboardData.length === 0 ? (
+              {sortedLeaderboard.length === 0 ? (
                 <div className="text-center py-12 text-slate-400">
                   <div className="text-5xl mb-4">👥</div>
                   <p className="mb-2">No leaderboard data yet</p>
                   <p className="text-sm">Add friends to see rankings!</p>
                 </div>
               ) : (
-                leaderboardData.map((person, index) => {
+                sortedLeaderboard.map((person, index) => {
                   const isCurrentUser = person.id === user.id
                   const rank = index + 1
                   const accessories = person.accessories ? JSON.parse(person.accessories) : []
@@ -183,8 +222,12 @@ export default function Leaderboard() {
 
                       {/* Points */}
                       <div className="text-right">
-                        <div className="text-xl font-bold text-brand-primary">{person.completed_tasks || 0}</div>
-                        <div className="text-xs text-slate-400">tasks done</div>
+                        <div className="text-xl font-bold text-brand-primary">
+                          {sortBy === 'streak' ? `🔥 ${person.streak || 0}` : `🌱 ${person.seeds || 0}`}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {sortBy === 'streak' ? 'day streak' : 'seeds'}
+                        </div>
                       </div>
                     </div>
                   )

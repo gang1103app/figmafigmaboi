@@ -12,6 +12,9 @@ export default function Social() {
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState(null)
+  const [selectedFriend, setSelectedFriend] = useState(null)
+  const [friendGarden, setFriendGarden] = useState(null)
+  const [loadingFriendData, setLoadingFriendData] = useState(false)
 
   // Load leaderboard or friends data when tab changes or user is available
   useEffect(() => {
@@ -84,6 +87,26 @@ export default function Social() {
     }
   }
 
+  const handleViewFriendProfile = async (friend) => {
+    setSelectedFriend(friend)
+    setLoadingFriendData(true)
+    try {
+      // Load friend's garden data
+      const gardenResponse = await api.getFriendGarden(friend.id)
+      setFriendGarden(gardenResponse)
+    } catch (error) {
+      console.error('Failed to load friend garden:', error)
+      setFriendGarden(null)
+    } finally {
+      setLoadingFriendData(false)
+    }
+  }
+
+  const handleCloseFriendProfile = () => {
+    setSelectedFriend(null)
+    setFriendGarden(null)
+  }
+
   const retryLoad = async () => {
     setError(null)
     setLoading(true)
@@ -117,6 +140,120 @@ export default function Social() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
       <div className="container max-w-5xl mx-auto px-4 py-6">
+        {/* Friend Profile Modal */}
+        {selectedFriend && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 overflow-y-auto">
+            <div className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full border border-slate-700 my-8">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">{selectedFriend.name}'s Profile</h3>
+                  <p className="text-slate-400">@{selectedFriend.username}</p>
+                </div>
+                <button
+                  onClick={handleCloseFriendProfile}
+                  className="text-slate-400 hover:text-white text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Mascot Display */}
+              <div className="bg-gradient-to-br from-brand-primary/20 to-brand-accent/10 rounded-xl p-6 mb-6">
+                <h4 className="text-lg font-semibold mb-4 text-center">Mascot</h4>
+                <div className="relative w-48 h-48 mx-auto">
+                  <img 
+                    src="/EcoBuddyTransparent_cropped.png" 
+                    alt="EcoBuddy" 
+                    className="w-full h-full object-contain"
+                  />
+                  {(() => {
+                    let accessories = []
+                    try {
+                      accessories = selectedFriend.accessories ? JSON.parse(selectedFriend.accessories) : []
+                    } catch (e) {
+                      accessories = []
+                    }
+                    return (
+                      <>
+                        {accessories.includes('sunglasses') && (
+                          <div className="absolute top-[28%] left-1/2 transform -translate-x-1/2 text-4xl">🕶️</div>
+                        )}
+                        {accessories.includes('tophat') && (
+                          <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 text-4xl">🎩</div>
+                        )}
+                        {accessories.includes('crown') && (
+                          <div className="absolute top-[8%] left-1/2 transform -translate-x-1/2 text-4xl">👑</div>
+                        )}
+                        {accessories.includes('scarf') && (
+                          <div className="absolute top-[55%] left-1/2 transform -translate-x-1/2 text-4xl">🧣</div>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
+                <div className="text-center mt-4">
+                  <p className="text-slate-300">Level {selectedFriend.level || 1}</p>
+                  <p className="text-sm text-slate-400 mt-1">🔥 {selectedFriend.streak || 0} day streak</p>
+                </div>
+              </div>
+
+              {/* Garden Display */}
+              <div className="bg-slate-900/50 rounded-xl p-6">
+                <h4 className="text-lg font-semibold mb-4">Garden</h4>
+                {loadingFriendData ? (
+                  <div className="text-center py-8 text-slate-400">Loading garden...</div>
+                ) : friendGarden && friendGarden.background && friendGarden.background.background_id ? (
+                  <div className="relative h-64 rounded-lg overflow-hidden"
+                    style={{
+                      backgroundImage: `url(${friendGarden.background.image_path})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  >
+                    {friendGarden.plants && friendGarden.plants.map(plant => {
+                      if (!plant.position_x && !plant.position_y) return null
+                      return (
+                        <div
+                          key={plant.id}
+                          className="absolute"
+                          style={{
+                            left: `${plant.position_x}px`,
+                            top: `${plant.position_y}px`,
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        >
+                          <img
+                            src={plant.image_path}
+                            alt={plant.name}
+                            className="w-12 h-12 object-contain"
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-400">
+                    <div className="text-4xl mb-2">🌱</div>
+                    <p>No garden set up yet</p>
+                  </div>
+                )}
+                {friendGarden && friendGarden.plants && friendGarden.plants.length > 0 && (
+                  <div className="mt-4 text-sm text-slate-400 text-center">
+                    {friendGarden.plants.length} plants in garden
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={handleCloseFriendProfile}
+                className="w-full mt-6 px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Social</h1>
@@ -299,9 +436,10 @@ export default function Social() {
                   }
                   
                   return (
-                    <div
+                    <button
                       key={friend.id}
-                      className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors"
+                      onClick={() => handleViewFriendProfile(friend)}
+                      className="w-full bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-brand-primary/30 transition-colors text-left"
                     >
                       <div className="flex items-center gap-4">
                         <div className="relative w-16 h-16">
@@ -334,9 +472,10 @@ export default function Social() {
                             <span>•</span>
                             <span>🔥 {friend.streak || 0} days</span>
                           </div>
+                          <div className="text-xs text-brand-primary mt-1">Click to view profile →</div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>
