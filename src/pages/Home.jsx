@@ -19,6 +19,8 @@ export default function Home() {
   const { user, updateUser } = useAuth()
   const [selectedAccessory, setSelectedAccessory] = useState(null)
   const [showShop, setShowShop] = useState(false)
+  const [showRenameModal, setShowRenameModal] = useState(false)
+  const [newName, setNewName] = useState('')
 
   if (!user) return null
 
@@ -65,6 +67,21 @@ export default function Home() {
     })
   }
 
+  const handleRenameMascot = () => {
+    if (newName.trim().length > 0 && newName.trim().length <= 20) {
+      updateUser({
+        ecobuddy: { ...ecobuddy, name: newName.trim() }
+      })
+      setShowRenameModal(false)
+      setNewName('')
+    }
+  }
+
+  const handleOpenRename = () => {
+    setNewName(ecobuddy.name)
+    setShowRenameModal(true)
+  }
+
   const ownedAccessories = ACCESSORIES.filter(acc => 
     ecobuddy.accessories?.includes(acc.id)
   )
@@ -76,6 +93,45 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071021] to-[#0e1723] text-slate-100 pb-20">
       <div className="container max-w-5xl mx-auto px-4 py-6">
+        {/* Rename Modal */}
+        {showRenameModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+            <div className="bg-slate-800 rounded-xl p-6 max-w-md w-full border border-slate-700">
+              <h3 className="text-xl font-bold mb-4 text-white">Rename Your Mascot</h3>
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                maxLength={20}
+                placeholder="Enter new name..."
+                className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-brand-primary mb-4"
+                autoFocus
+              />
+              <div className="text-sm text-slate-400 mb-4">
+                {newName.length}/20 characters
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowRenameModal(false)
+                    setNewName('')
+                  }}
+                  className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRenameMascot}
+                  disabled={!newName.trim() || newName.trim().length === 0}
+                  className="flex-1 px-4 py-2 bg-brand-primary hover:bg-brand-primary/80 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Welcome, {user.name}!</h1>
@@ -132,6 +188,13 @@ export default function Home() {
 
             <div className="flex items-center justify-center gap-3 mb-2 mt-4">
               <h2 className="text-3xl font-bold">{ecobuddy.name}</h2>
+              <button
+                onClick={handleOpenRename}
+                className="text-slate-400 hover:text-white transition-colors"
+                title="Rename mascot"
+              >
+                ✏️
+              </button>
               <span className="text-xs bg-brand-primary px-2 py-1 rounded-full">Lvl {ecobuddy.level || 1}</span>
             </div>
             
